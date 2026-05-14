@@ -18,8 +18,6 @@ import { validateForm } from './lib/validation';
 import type { SeveranceForm, TerminationReason } from './types';
 
 const initialForm: SeveranceForm = {
-  employeeName: '',
-  employerName: '',
   startDate: '',
   endDate: '',
   hasWrittenContract: true,
@@ -139,8 +137,6 @@ function App() {
         <form className="form-panel" onSubmit={(event) => event.preventDefault()}>
           <SectionTitle icon={<ClipboardList size={20} />} title="职业信息" />
           <div className="grid two">
-            <TextInput label="姓名" value={form.employeeName} onChange={(value) => setField('employeeName', value)} />
-            <TextInput label="公司名称" value={form.employerName} onChange={(value) => setField('employerName', value)} />
             <TextInput
               label="实际入职时间"
               type="date"
