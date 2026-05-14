@@ -35,7 +35,7 @@ corepack pnpm build
 
 提交数据会同时保存两种形态：
 
-- 独立列：入职时间、离职时间、合同信息、收入、地区、解除原因、咨询联系方式等，方便在 Supabase Table Editor 里查看和导出。
+- 独立列：入职时间、离职时间、合同信息、收入、地区、解除原因代码、解除原因中文标签、解除原因分组、咨询联系方式等，方便在 Supabase Table Editor 里查看和导出。
 - JSON 备份：`form_payload` 保存完整原始表单，`calculation_result` 保存完整计算结果，方便后续排查或二次分析。
 
 如果部署页面提交时报 `rest/v1/severance_submissions 404`，通常表示当前 Supabase 项目还没有执行建表脚本，或 REST API schema cache 尚未刷新。请确认：
