@@ -12,8 +12,17 @@ export const supabase = isSupabaseConfigured
   : null;
 
 const formatSupabaseError = (error: { code?: string; message?: string; details?: string }) => {
+  const message = error.message?.toLowerCase() || '';
+
   if (error.code === 'PGRST205' || error.message?.toLowerCase().includes('could not find the table')) {
     return new Error('提交失败：Supabase 尚未找到 severance_submissions 表。请在当前项目执行 supabase/schema.sql 后等待 REST API 刷新。');
+  }
+
+  if (
+    error.code === 'PGRST204' ||
+    (message.includes('could not find') && message.includes('column') && message.includes('schema cache'))
+  ) {
+    return new Error('提交失败：Supabase 表结构未同步，REST API schema cache 尚未找到新字段。请在当前项目重新执行 supabase/schema.sql，或至少添加缺失列后执行 notify pgrst, \'reload schema\'; 再等待几十秒重试。');
   }
 
   if (error.code === '42501' || error.message?.toLowerCase().includes('permission denied')) {
