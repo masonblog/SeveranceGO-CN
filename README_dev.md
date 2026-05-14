@@ -77,3 +77,5 @@ notify pgrst, 'reload schema';
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
 3. 确认 Supabase 已执行 `supabase/schema.sql`，并且 RLS 插入策略存在。
+
+注意：这两个值需要配置为仓库级 `Repository secrets`。如果只配置在 GitHub Pages environment 里，构建步骤可能读取不到，页面提交时会出现 `No API key found in request`。
