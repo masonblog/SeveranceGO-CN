@@ -3,9 +3,22 @@ create table if not exists public.severance_submissions (
   created_at timestamptz not null default now(),
   page_version text not null,
   legal_basis_version text not null,
+  start_date date not null,
+  end_date date not null,
+  has_written_contract boolean not null,
+  contract_signed_date date,
+  previous_year_income numeric not null,
   province text not null,
   city text not null,
   salary_basis text not null,
+  average_monthly_salary_override numeric,
+  minimum_monthly_wage_override numeric,
+  termination_reason text not null,
+  forced_reason text,
+  has_major_misconduct boolean not null default false,
+  has_pay_cut_or_transfer boolean not null default false,
+  is_mass_layoff boolean not null default false,
+  article40_no_notice boolean not null default false,
   needs_consultation boolean not null default false,
   phone text,
   wechat text,
@@ -13,6 +26,21 @@ create table if not exists public.severance_submissions (
   form_payload jsonb not null,
   calculation_result jsonb not null
 );
+
+alter table public.severance_submissions
+  add column if not exists start_date date,
+  add column if not exists end_date date,
+  add column if not exists has_written_contract boolean,
+  add column if not exists contract_signed_date date,
+  add column if not exists previous_year_income numeric,
+  add column if not exists average_monthly_salary_override numeric,
+  add column if not exists minimum_monthly_wage_override numeric,
+  add column if not exists termination_reason text,
+  add column if not exists forced_reason text,
+  add column if not exists has_major_misconduct boolean not null default false,
+  add column if not exists has_pay_cut_or_transfer boolean not null default false,
+  add column if not exists is_mass_layoff boolean not null default false,
+  add column if not exists article40_no_notice boolean not null default false;
 
 alter table public.severance_submissions
 drop constraint if exists severance_submissions_form_payload_no_identity_fields;
@@ -25,6 +53,9 @@ check (
 ) not valid;
 
 alter table public.severance_submissions enable row level security;
+
+grant usage on schema public to anon;
+grant insert on table public.severance_submissions to anon;
 
 drop policy if exists "anon_insert_severance_submissions" on public.severance_submissions;
 create policy "anon_insert_severance_submissions"
