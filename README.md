@@ -20,59 +20,19 @@
 - 表单内容和计算结果写入 Supabase `severance_submissions` 表。
 - GitHub Actions 自动构建并部署到 GitHub Pages。
 
-## 本地运行
+## 表单填写教程
 
-```bash
-corepack pnpm install
-corepack pnpm dev
-```
+1. 填写职业信息：输入实际入职时间、离职或预计离职时间、上一自然年度总收入，并选择劳动合同履行地。姓名和公司名称可用于后续咨询记录，但不影响估算公式。
+2. 核对地区工资口径：系统会按所选地区自动带出上年度职工月平均工资和月最低工资。若你掌握仲裁、法院或当地最新公布口径，可在“可覆盖”输入框中手动填写。
+3. 填写合同信息：选择是否已签书面劳动合同；如果已签，请填写书面合同签订时间。未签书面合同时，系统会同步估算可能涉及的二倍工资区间。
+4. 选择离职情况：按实际原因选择协商一致、无过失性解除、经济性裁员、疑似违法解除、主动辞职、被迫解除、重大违纪、合同到期终止或其他不确定情形。若选择“被迫解除”，建议补充欠薪、未缴社保、违法调岗降薪等具体原因。
+5. 勾选争议因素：如存在重大违纪争议、调岗降薪、批量裁员，或第 40 条解除且未提前 30 日通知，请勾选对应选项；这些信息会影响风险提示和 N+1 判断。
+6. 选择是否需要免费法律咨询：如果选择“需要咨询”，手机号为必填；微信号和咨询说明可补充公司解除理由、通知书、欠薪或社保问题等线索。
+7. 点击“提交并查看计算结果”：表单通过校验后，右侧会展示预计一次性金额区间、工作年限、补偿月数、计算明细、适用规则、风险提示和建议核查事项。
 
-复制 `.env.example` 为 `.env.local`，填入 Supabase 项目的 URL 和 anon public key：
+## 开发与部署
 
-```bash
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_ANON_KEY=...
-```
-
-常用命令：
-
-```bash
-corepack pnpm test
-corepack pnpm build
-```
-
-## Supabase
-
-在 Supabase SQL Editor 中执行：
-
-```sql
--- supabase/schema.sql
-```
-
-该脚本会创建 `severance_submissions` 表，并启用 Row Level Security。匿名用户仅允许插入，不允许公开读取。
-
-环境变量获取位置：
-
-- `VITE_SUPABASE_URL`：Supabase 项目 `Project Settings` -> `API` -> `Project URL`
-- `VITE_SUPABASE_ANON_KEY`：Supabase 项目 `Project Settings` -> `API` -> `Project API keys` -> `anon public`
-
-不要把 `service_role` key 放进前端或 GitHub Pages。
-
-## 自动部署
-
-项目已配置 GitHub Actions：
-
-- workflow 文件：`.github/workflows/deploy.yml`
-- 触发方式：推送到 `main` 或 `master`，也可手动 `workflow_dispatch`
-- 部署目标：GitHub Pages
-
-你需要在 GitHub 仓库中手动完成：
-
-1. `Settings` -> `Pages` -> `Build and deployment`，将 `Source` 设为 `GitHub Actions`。
-2. `Settings` -> `Secrets and variables` -> `Actions`，新增：
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-3. 确认 Supabase 已执行 `supabase/schema.sql`，并且 RLS 插入策略存在。
+本地运行、Supabase 配置和 GitHub Pages 自动部署说明已移至 [README_dev.md](README_dev.md)。
 
 ## 数据口径
 
