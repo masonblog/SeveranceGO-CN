@@ -119,7 +119,7 @@ function App() {
         <div className="hero-copy">
           <div className="eyebrow">
             <Scale size={18} aria-hidden="true" />
-            中国劳动关系离职补偿估算
+            SeveranceGO-CN
           </div>
           <h1>离职补偿金计算工具</h1>
           <p>
