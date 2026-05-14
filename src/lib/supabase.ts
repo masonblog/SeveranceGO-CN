@@ -37,7 +37,7 @@ export const submitSeveranceLead = async (form: SeveranceForm, result: Calculati
     throw new Error('Supabase 尚未配置。');
   }
 
-  const { error } = await supabase.from('severance_submissions').insert({
+  const submission = {
     page_version: '0.1.0',
     legal_basis_version: LEGAL_BASIS_VERSION,
     start_date: form.startDate,
@@ -55,14 +55,15 @@ export const submitSeveranceLead = async (form: SeveranceForm, result: Calculati
     has_major_misconduct: form.hasMajorMisconduct,
     has_pay_cut_or_transfer: form.hasPayCutOrTransfer,
     is_mass_layoff: form.isMassLayoff,
-    article40_no_notice: form.article40NoNotice,
     needs_consultation: form.needsConsultation,
     phone: form.phone.trim() || null,
     wechat: form.wechat.trim() || null,
     consultation_note: form.consultationNote.trim() || null,
     form_payload: form,
     calculation_result: result,
-  });
+  };
+
+  const { error } = await supabase.from('severance_submissions').insert(submission);
 
   if (error) throw formatSupabaseError(error);
 };
