@@ -14,6 +14,16 @@ create table if not exists public.severance_submissions (
   calculation_result jsonb not null
 );
 
+alter table public.severance_submissions
+drop constraint if exists severance_submissions_form_payload_no_identity_fields;
+
+alter table public.severance_submissions
+add constraint severance_submissions_form_payload_no_identity_fields
+check (
+  not (form_payload ? 'employeeName')
+  and not (form_payload ? 'employerName')
+) not valid;
+
 alter table public.severance_submissions enable row level security;
 
 drop policy if exists "anon_insert_severance_submissions" on public.severance_submissions;

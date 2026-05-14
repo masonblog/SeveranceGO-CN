@@ -12,8 +12,6 @@ const region: RegionData = {
 };
 
 const baseForm: SeveranceForm = {
-  employeeName: '',
-  employerName: '',
   startDate: '2020-01-01',
   endDate: '2023-01-01',
   hasWrittenContract: true,

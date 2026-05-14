@@ -22,8 +22,6 @@ export interface RegionData {
 }
 
 export interface SeveranceForm {
-  employeeName: string;
-  employerName: string;
   startDate: string;
   endDate: string;
   hasWrittenContract: boolean;
