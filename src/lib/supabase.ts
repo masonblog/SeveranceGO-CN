@@ -2,8 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import type { CalculationResult, SeveranceForm } from '../types';
 import { LEGAL_BASIS_VERSION } from './calculator';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
+const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim();
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
@@ -13,6 +13,10 @@ export const supabase = isSupabaseConfigured
 
 const formatSupabaseError = (error: { code?: string; message?: string; details?: string }) => {
   const message = error.message?.toLowerCase() || '';
+
+  if (message.includes('no api key found')) {
+    return new Error('提交失败：部署页面缺少 Supabase anon key。请确认 GitHub Actions 的 Repository secrets 已配置 VITE_SUPABASE_ANON_KEY，并重新部署。');
+  }
 
   if (error.code === 'PGRST205' || error.message?.toLowerCase().includes('could not find the table')) {
     return new Error('提交失败：Supabase 尚未找到 severance_submissions 表。请在当前项目执行 supabase/schema.sql 后等待 REST API 刷新。');
