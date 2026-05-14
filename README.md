@@ -1,4 +1,4 @@
-# SeveranceGO-CN
+# SeveranceGO-CN | 中国离职补偿金计算工具
 
 ![React](https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)
@@ -6,7 +6,7 @@
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ecf8e?logo=supabase&logoColor=white)
 ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-Pages-2088ff?logo=githubactions&logoColor=white)
 
-中国离职补偿金计算工具。项目基于《劳动合同法》《劳动合同法实施条例》及劳动争议司法解释的常见规则，估算经济补偿金、违法解除赔偿金、代通知金和未签书面劳动合同二倍工资。
+项目基于《劳动合同法》《劳动合同法实施条例》及劳动争议司法解释的常见规则，估算经济补偿金、违法解除赔偿金、代通知金和未签书面劳动合同二倍工资。
 
 ## 功能
 
