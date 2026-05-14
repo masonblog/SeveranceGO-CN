@@ -4,6 +4,7 @@ import {
   AlertCircle,
   BadgeCheck,
   Calculator,
+  ChevronDown,
   CheckCircle2,
   ClipboardList,
   Database,
@@ -14,6 +15,7 @@ import {
 import { findRegion, getCitiesByProvince, provinces } from './data/regions';
 import { calculateSeverance } from './lib/calculator';
 import { isSupabaseConfigured, submitSeveranceLead } from './lib/supabase';
+import { getTerminationMetadata, terminationGroups } from './lib/termination';
 import { validateForm } from './lib/validation';
 import type { SeveranceForm, TerminationReason } from './types';
 
@@ -39,17 +41,7 @@ const initialForm: SeveranceForm = {
   consultationNote: '',
 };
 
-const terminationOptions: Array<{ value: TerminationReason; label: string; hint: string }> = [
-  { value: 'mutual', label: '协商一致解除', hint: '单位提出并协商一致，通常计算 N。' },
-  { value: 'article40', label: '无过失性解除', hint: '医疗期、不胜任、客观情况变化等。' },
-  { value: 'layoff', label: '经济性裁员', hint: '批量裁员或经营困难裁撤。' },
-  { value: 'illegal', label: '疑似违法解除', hint: '未依法定理由或程序解除，估算 2N。' },
-  { value: 'voluntary', label: '普通主动辞职', hint: '通常无经济补偿。' },
-  { value: 'forced', label: '被迫解除', hint: '欠薪、未缴社保、违法调岗降薪等。' },
-  { value: 'misconduct', label: '重大违纪解除', hint: '通常无补偿，但程序和证据很关键。' },
-  { value: 'contract_end', label: '合同到期终止', hint: '单位不续签或降低条件续签。' },
-  { value: 'other', label: '其他/不确定', hint: '先按风险提示辅助判断。' },
-];
+const getTerminationGroupTitle = (value: TerminationReason) => getTerminationMetadata(value).groupTitle;
 
 const currency = new Intl.NumberFormat('zh-CN', {
   style: 'currency',
@@ -63,6 +55,7 @@ function App() {
   const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [submitMessage, setSubmitMessage] = useState('');
   const [submittedResult, setSubmittedResult] = useState<ReturnType<typeof calculateSeverance> | null>(null);
+  const [expandedTerminationGroup, setExpandedTerminationGroup] = useState(getTerminationGroupTitle(initialForm.terminationReason));
 
   const cityOptions = useMemo(() => getCitiesByProvince(form.province), [form.province]);
   const region = useMemo(() => findRegion(form.province, form.city), [form.province, form.city]);
@@ -73,6 +66,22 @@ function App() {
     setSubmitState('idle');
     setSubmitMessage('');
     setSubmittedResult(null);
+  };
+
+  const setTerminationReason = (terminationReason: TerminationReason) => {
+    setForm((current) => ({
+      ...current,
+      terminationReason,
+      forcedReason: terminationReason === 'forced' ? current.forcedReason : '',
+      article40NoNotice: terminationReason === 'article40' ? current.article40NoNotice : false,
+      hasPayCutOrTransfer: terminationReason === 'forced' ? current.hasPayCutOrTransfer : false,
+      hasMajorMisconduct: terminationReason === 'misconduct',
+      isMassLayoff: terminationReason === 'layoff',
+    }));
+    setSubmitState('idle');
+    setSubmitMessage('');
+    setSubmittedResult(null);
+    setExpandedTerminationGroup(getTerminationGroupTitle(terminationReason));
   };
 
   const setProvince = (province: string) => {
@@ -124,13 +133,6 @@ function App() {
             按《劳动合同法》常见解除、终止和未签书面合同规则，快速估算一次性补偿、赔偿和代通知金。
           </p>
         </div>
-        <div className="hero-visual" aria-hidden="true">
-          <div className="document-stack">
-            <FileText size={42} />
-            <span>劳动合同</span>
-            <strong>N / 2N / N+1</strong>
-          </div>
-        </div>
       </section>
 
       <section className="workspace">
@@ -143,6 +145,7 @@ function App() {
               value={form.startDate}
               required
               error={errors.startDate}
+              helperText="实际开始工作的第一天。"
               onChange={(value) => setField('startDate', value)}
             />
             <TextInput
@@ -151,6 +154,7 @@ function App() {
               value={form.endDate}
               required
               error={errors.endDate}
+              helperText="或者公司要求的具体离职时间。"
               onChange={(value) => setField('endDate', value)}
             />
             <TextInput
@@ -159,6 +163,7 @@ function App() {
               value={String(form.previousYearIncome || '')}
               required
               error={errors.previousYearIncome}
+              helperText="建议从《个人所得税》APP 的“收入纳税明细”中直接查看年度收入。"
               onChange={(value) => setField('previousYearIncome', Number(value || 0))}
             />
             <RegionSelect
@@ -221,50 +226,71 @@ function App() {
           )}
 
           <SectionTitle icon={<Calculator size={20} />} title="离职情况" />
-          <div className="option-grid">
-            {terminationOptions.map((option) => (
-              <button
-                type="button"
-                key={option.value}
-                className={form.terminationReason === option.value ? 'choice active' : 'choice'}
-                onClick={() => setField('terminationReason', option.value)}
-              >
-                <strong>{option.label}</strong>
-                <span>{option.hint}</span>
-              </button>
-            ))}
-          </div>
+          <div className="termination-flow">
+            {terminationGroups.map((group) => {
+              const selectedOption = group.options.find((option) => option.value === form.terminationReason);
+              const isExpanded = expandedTerminationGroup === group.title;
 
-          {form.terminationReason === 'forced' && (
-            <TextInput
-              label="被迫解除原因"
-              value={form.forcedReason}
-              placeholder="例如：欠薪、未缴社保、违法调岗降薪"
-              onChange={(value) => setField('forcedReason', value)}
-            />
-          )}
+              return (
+                <div className={selectedOption ? 'reason-group active' : 'reason-group'} key={group.title}>
+                  <button
+                    type="button"
+                    className="reason-group-toggle"
+                    aria-expanded={isExpanded}
+                    onClick={() => setExpandedTerminationGroup(isExpanded ? '' : group.title)}
+                  >
+                    <span>
+                      <strong>{group.title}</strong>
+                      <em>{selectedOption ? `已选：${selectedOption.label}` : group.description}</em>
+                    </span>
+                    <ChevronDown size={18} aria-hidden="true" />
+                  </button>
+                  {isExpanded && (
+                    <div className="reason-options">
+                      {group.options.map((option) => (
+                        <div className={form.terminationReason === option.value ? 'choice active' : 'choice'} key={option.value}>
+                          <button type="button" onClick={() => setTerminationReason(option.value)}>
+                            <strong>{option.label}</strong>
+                            <span>{option.hint}</span>
+                          </button>
+                          {form.terminationReason === option.value && option.value === 'forced' && (
+                            <div className="inline-follow-up">
+                              <TextInput
+                                label="公司存在的问题"
+                                value={form.forcedReason}
+                                placeholder="例如：欠薪、未缴社保、违法调岗降薪"
+                                onChange={(value) => setField('forcedReason', value)}
+                              />
+                              <CheckBox
+                                label="涉及调岗、降薪或岗位安排变化"
+                                checked={form.hasPayCutOrTransfer}
+                                onChange={(value) => setField('hasPayCutOrTransfer', value)}
+                              />
+                            </div>
+                          )}
+                          {form.terminationReason === option.value && option.value === 'article40' && (
+                            <div className="inline-follow-up">
+                              <CheckBox
+                                label="公司没有提前 30 天书面通知"
+                                checked={form.article40NoNotice}
+                                onChange={(value) => setField('article40NoNotice', value)}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+              </div>
+              );
+            })}
 
-          <div className="checks">
-            <CheckBox
-              label="存在重大违纪争议"
-              checked={form.hasMajorMisconduct}
-              onChange={(value) => setField('hasMajorMisconduct', value)}
-            />
-            <CheckBox
-              label="存在调岗降薪"
-              checked={form.hasPayCutOrTransfer}
-              onChange={(value) => setField('hasPayCutOrTransfer', value)}
-            />
-            <CheckBox
-              label="属于批量裁员"
-              checked={form.isMassLayoff}
-              onChange={(value) => setField('isMassLayoff', value)}
-            />
-            <CheckBox
-              label="第 40 条解除且未提前 30 日通知"
-              checked={form.article40NoNotice}
-              onChange={(value) => setField('article40NoNotice', value)}
-            />
+            <div className="selected-reason">
+              <span>当前选择</span>
+              <strong>{getTerminationMetadata(form.terminationReason).label}</strong>
+              <p>{getTerminationMetadata(form.terminationReason).hint}</p>
+            </div>
+
           </div>
 
           <SectionTitle icon={<Send size={20} />} title="免费法律咨询" />
@@ -373,6 +399,7 @@ function TextInput({
   onChange,
   type = 'text',
   placeholder,
+  helperText,
   error,
   required = false,
 }: {
@@ -381,12 +408,14 @@ function TextInput({
   onChange: (value: string) => void;
   type?: string;
   placeholder?: string;
+  helperText?: string;
   error?: string;
   required?: boolean;
 }) {
   return (
     <label className="field">
       <FieldLabel label={label} required={required} />
+      {helperText && <small>{helperText}</small>}
       <input type={type} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
       {error && <em>{error}</em>}
     </label>
@@ -443,6 +472,7 @@ function RegionSelect({
   return (
     <label className="field region-select-field">
       <FieldLabel label="劳动合同履行地" required />
+      <small>实际工作地点与用人单位注册地不一致时，以实际工作地点为准。</small>
       <div className="inline-selects">
         <select value={province} aria-label="劳动合同履行省份" onChange={(event) => onProvinceChange(event.target.value)}>
           {provinces.map((item) => (

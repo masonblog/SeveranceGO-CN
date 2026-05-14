@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { CalculationResult, SeveranceForm } from '../types';
 import { LEGAL_BASIS_VERSION } from './calculator';
+import { getTerminationMetadata } from './termination';
 
 const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
 const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim();
@@ -77,6 +78,7 @@ export const submitSeveranceLead = async (form: SeveranceForm, result: Calculati
     throw new Error('Supabase 尚未配置。');
   }
 
+  const termination = getTerminationMetadata(form.terminationReason);
   const submission = {
     page_version: '0.1.0',
     legal_basis_version: LEGAL_BASIS_VERSION,
@@ -91,6 +93,8 @@ export const submitSeveranceLead = async (form: SeveranceForm, result: Calculati
     average_monthly_salary_override: form.averageMonthlySalaryOverride || null,
     minimum_monthly_wage_override: form.minimumMonthlyWageOverride || null,
     termination_reason: form.terminationReason,
+    termination_reason_label: termination.label,
+    termination_reason_group: termination.groupTitle,
     forced_reason: form.forcedReason.trim() || null,
     has_major_misconduct: form.hasMajorMisconduct,
     has_pay_cut_or_transfer: form.hasPayCutOrTransfer,
