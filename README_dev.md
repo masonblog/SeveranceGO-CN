@@ -33,6 +33,17 @@ corepack pnpm build
 
 该脚本会创建 `severance_submissions` 表，并启用 Row Level Security。匿名用户仅允许插入，不允许公开读取。
 
+提交数据会同时保存两种形态：
+
+- 独立列：入职时间、离职时间、合同信息、收入、地区、解除原因、咨询联系方式等，方便在 Supabase Table Editor 里查看和导出。
+- JSON 备份：`form_payload` 保存完整原始表单，`calculation_result` 保存完整计算结果，方便后续排查或二次分析。
+
+如果部署页面提交时报 `rest/v1/severance_submissions 404`，通常表示当前 Supabase 项目还没有执行建表脚本，或 REST API schema cache 尚未刷新。请确认：
+
+- GitHub Actions 中的 `VITE_SUPABASE_URL` 指向的就是你执行 SQL 的同一个 Supabase 项目。
+- 在该项目的 SQL Editor 里完整执行 `supabase/schema.sql`，包括 `grant` 和 RLS policy。
+- 执行后等待几十秒再刷新部署页面重试；必要时到 Supabase `Project Settings` -> `API` 确认 `public` schema 对 API 暴露。
+
 环境变量获取位置：
 
 - `VITE_SUPABASE_URL`：Supabase 项目 `Project Settings` -> `API` -> `Project URL`
