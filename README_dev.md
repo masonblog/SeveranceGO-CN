@@ -44,6 +44,17 @@ corepack pnpm build
 - 在该项目的 SQL Editor 里完整执行 `supabase/schema.sql`，包括 `grant` 和 RLS policy。
 - 执行后等待几十秒再刷新部署页面重试；必要时到 Supabase `Project Settings` -> `API` 确认 `public` schema 对 API 暴露。
 
+如果部署页面提交时报 `Could not find the 'article40_no_notice' column of 'severance_submissions' in the schema cache`，表示线上 Supabase 表缺少最新字段，或字段刚添加但 REST API schema cache 还没刷新。处理方式：
+
+```sql
+alter table public.severance_submissions
+  add column if not exists article40_no_notice boolean not null default false;
+
+notify pgrst, 'reload schema';
+```
+
+执行后等待几十秒，再刷新部署页面提交。
+
 环境变量获取位置：
 
 - `VITE_SUPABASE_URL`：Supabase 项目 `Project Settings` -> `API` -> `Project URL`

@@ -70,3 +70,5 @@ on public.severance_submissions
 for select
 to service_role
 using (true);
+
+notify pgrst, 'reload schema';
