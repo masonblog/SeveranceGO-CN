@@ -26,7 +26,9 @@ const formatSupabaseError = (error: { code?: string; message?: string; details?:
     error.code === 'PGRST204' ||
     (message.includes('could not find') && message.includes('column') && message.includes('schema cache'))
   ) {
-    return new Error('提交失败：Supabase 表结构未同步，REST API schema cache 尚未找到新字段。请在当前项目重新执行 supabase/schema.sql，或至少添加缺失列后执行 notify pgrst, \'reload schema\'; 再等待几十秒重试。');
+    const missingColumn = error.message?.match(/'([^']+)' column/)?.[1];
+    const columnHint = missingColumn ? `缺失字段：${missingColumn}。` : '';
+    return new Error(`提交失败：Supabase 表结构未同步，REST API schema cache 尚未找到新字段。${columnHint}请确认 GitHub Pages 使用的 VITE_SUPABASE_URL 与你执行 SQL 的 Supabase 项目一致，然后重新执行 supabase/schema.sql。`);
   }
 
   if (error.code === '42501' || error.message?.toLowerCase().includes('permission denied')) {
@@ -34,6 +36,40 @@ const formatSupabaseError = (error: { code?: string; message?: string; details?:
   }
 
   return new Error(error.message || '提交失败，请稍后重试。');
+};
+
+const isMissingSchemaCacheColumnError = (error: { code?: string; message?: string }) => {
+  const message = error.message?.toLowerCase() || '';
+
+  return (
+    error.code === 'PGRST204' ||
+    (message.includes('could not find') && message.includes('column') && message.includes('schema cache'))
+  );
+};
+
+const getMissingSchemaCacheColumn = (error: { message?: string }) => error.message?.match(/'([^']+)' column/)?.[1];
+
+const insertWithSchemaCacheRetry = async (submission: Record<string, unknown>) => {
+  const retryableSubmission = { ...submission };
+  const requiredColumns = new Set(['page_version', 'legal_basis_version', 'form_payload', 'calculation_result']);
+  let lastError: { code?: string; message?: string; details?: string } | null = null;
+
+  for (let attempt = 0; attempt < Object.keys(submission).length; attempt += 1) {
+    const { error } = await supabase!.from('severance_submissions').insert(retryableSubmission);
+
+    if (!error) return;
+    lastError = error;
+    if (!isMissingSchemaCacheColumnError(error)) throw error;
+
+    const missingColumn = getMissingSchemaCacheColumn(error);
+    if (!missingColumn || requiredColumns.has(missingColumn) || !(missingColumn in retryableSubmission)) {
+      throw error;
+    }
+
+    delete retryableSubmission[missingColumn];
+  }
+
+  throw lastError || new Error('提交失败，请稍后重试。');
 };
 
 export const submitSeveranceLead = async (form: SeveranceForm, result: CalculationResult, province: string, city: string) => {
@@ -59,6 +95,7 @@ export const submitSeveranceLead = async (form: SeveranceForm, result: Calculati
     has_major_misconduct: form.hasMajorMisconduct,
     has_pay_cut_or_transfer: form.hasPayCutOrTransfer,
     is_mass_layoff: form.isMassLayoff,
+    article40_no_notice: form.article40NoNotice,
     needs_consultation: form.needsConsultation,
     phone: form.phone.trim() || null,
     wechat: form.wechat.trim() || null,
@@ -67,7 +104,9 @@ export const submitSeveranceLead = async (form: SeveranceForm, result: Calculati
     calculation_result: result,
   };
 
-  const { error } = await supabase.from('severance_submissions').insert(submission);
-
-  if (error) throw formatSupabaseError(error);
+  try {
+    await insertWithSchemaCacheRetry(submission);
+  } catch (error) {
+    throw formatSupabaseError(error as { code?: string; message?: string; details?: string });
+  }
 };

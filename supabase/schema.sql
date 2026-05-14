@@ -28,11 +28,16 @@ create table if not exists public.severance_submissions (
 );
 
 alter table public.severance_submissions
+  add column if not exists page_version text,
+  add column if not exists legal_basis_version text,
   add column if not exists start_date date,
   add column if not exists end_date date,
   add column if not exists has_written_contract boolean,
   add column if not exists contract_signed_date date,
   add column if not exists previous_year_income numeric,
+  add column if not exists province text,
+  add column if not exists city text,
+  add column if not exists salary_basis text,
   add column if not exists average_monthly_salary_override numeric,
   add column if not exists minimum_monthly_wage_override numeric,
   add column if not exists termination_reason text,
@@ -40,7 +45,13 @@ alter table public.severance_submissions
   add column if not exists has_major_misconduct boolean not null default false,
   add column if not exists has_pay_cut_or_transfer boolean not null default false,
   add column if not exists is_mass_layoff boolean not null default false,
-  add column if not exists article40_no_notice boolean not null default false;
+  add column if not exists article40_no_notice boolean not null default false,
+  add column if not exists needs_consultation boolean not null default false,
+  add column if not exists phone text,
+  add column if not exists wechat text,
+  add column if not exists consultation_note text,
+  add column if not exists form_payload jsonb,
+  add column if not exists calculation_result jsonb;
 
 alter table public.severance_submissions
 drop constraint if exists severance_submissions_form_payload_no_identity_fields;
