@@ -8,6 +8,8 @@
 
 项目基于《劳动合同法》《劳动合同法实施条例》及劳动争议司法解释的常见规则，估算经济补偿金、违法解除赔偿金、代通知金和未签书面劳动合同二倍工资。
 
+工具直达：[https://masonblog.github.io/SeveranceGO-CN/](https://masonblog.github.io/SeveranceGO-CN/)
+
 ## 功能
 
 - 单页响应式表单，提交后展示计算结果。
