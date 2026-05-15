@@ -8,8 +8,7 @@
 
 项目帮助你一键估算离职经济补偿金、赔偿金、代通知金，以及未签劳动合同二倍工资等一次性补偿数额，基于《劳动合同法》《劳动合同法实施条例》及劳动争议司法解释的常见规则，根据录入的具体信息进行综合评估。
 
-**[开始使用](https://masonblog.github.io/SeveranceGO-CN/)**  
-备用访问：**[severance.masonhu.xyz](https://severance.masonhu.xyz/)**
+[开始使用](https://masonblog.github.io/SeveranceGO-CN/) | [备用地址](https://severance.masonhu.xyz/)
 
 ---
 
