@@ -17,7 +17,7 @@ import { calculateSeverance } from './lib/calculator';
 import { isSupabaseConfigured, submitSeveranceLead } from './lib/supabase';
 import { getTerminationMetadata, terminationGroups } from './lib/termination';
 import { validateForm } from './lib/validation';
-import type { SeveranceForm, TerminationReason } from './types';
+import type { AverageSalaryLevel, MinimumWageLevel, SeveranceForm, TerminationReason } from './types';
 
 const initialForm: SeveranceForm = {
   startDate: '',
@@ -48,6 +48,24 @@ const currency = new Intl.NumberFormat('zh-CN', {
   currency: 'CNY',
   maximumFractionDigits: 0,
 });
+
+const averageSalaryLevelLabels: Record<AverageSalaryLevel, string> = {
+  city_official: '城市官方',
+  province_official: '省级官方',
+  subprovince_region_official: '省内片区官方',
+  national_region_reference: '全国区域参考',
+};
+
+const minimumWageLevelLabels: Record<MinimumWageLevel, string> = {
+  city_or_county_mapped: '城市/区县映射',
+  province_grade_reference: '省级档位参考',
+};
+
+const fallbackAverageText: Record<Exclude<AverageSalaryLevel, 'city_official'>, string> = {
+  province_official: '省级',
+  subprovince_region_official: '片区',
+  national_region_reference: '国家区域',
+};
 
 function App() {
   const [form, setForm] = useState<SeveranceForm>(initialForm);
@@ -180,15 +198,36 @@ function App() {
           <div className="region-box">
             <div>
               <strong>{region.province} · {region.city}</strong>
-              <span>{region.dataYear} 官方/参考口径</span>
+              <span>2024 年平均工资 / 最新最低工资口径</span>
             </div>
-            <p>{region.source}</p>
+            <p>
+              <b>{averageSalaryLevelLabels[region.averageSalaryLevel]}</b>
+              {region.dataYear} 年 {region.averageSalaryBasis}：{currency.format(region.averageMonthlySalary)} / 月。
+              来源：
+              <a href={region.averageSalarySourceUrl} target="_blank" rel="noreferrer">
+                {region.averageSalarySourceName}
+              </a>
+            </p>
+            <p>
+              <b>{minimumWageLevelLabels[region.minimumWageLevel]}</b>
+              最低工资标准：{currency.format(region.minimumMonthlyWage)} / 月，生效日 {region.minimumWageEffectiveDate}。
+              来源：
+              <a href={region.minimumWageSourceUrl} target="_blank" rel="noreferrer">
+                {region.minimumWageSourceName}
+              </a>
+            </p>
+            {region.averageSalaryLevel !== 'city_official' && (
+              <p className="region-caution">
+                未检索到该城市 2024 城市级官方平均工资，当前按
+                {fallbackAverageText[region.averageSalaryLevel]}官方口径预填。
+              </p>
+            )}
             {region.note && <p>{region.note}</p>}
           </div>
 
           <div className="grid two">
             <TextInput
-              label="当地上年度职工月平均工资（可覆盖）"
+              label="经济补偿封顶口径：当地上年度职工月平均工资（可覆盖）"
               type="number"
               value={String(form.averageMonthlySalaryOverride || '')}
               placeholder={String(region.averageMonthlySalary)}
@@ -196,7 +235,7 @@ function App() {
               onChange={(value) => setField('averageMonthlySalaryOverride', value ? Number(value) : '')}
             />
             <TextInput
-              label="当地月最低工资（可覆盖）"
+              label="当地最低工资标准（可覆盖）"
               type="number"
               value={String(form.minimumMonthlyWageOverride || '')}
               placeholder={String(region.minimumMonthlyWage)}

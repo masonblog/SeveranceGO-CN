@@ -11,6 +11,14 @@ export type TerminationReason =
 
 export type SalaryBasis = 'previous_calendar_year';
 
+export type AverageSalaryLevel =
+  | 'city_official'
+  | 'province_official'
+  | 'subprovince_region_official'
+  | 'national_region_reference';
+
+export type MinimumWageLevel = 'city_or_county_mapped' | 'province_grade_reference';
+
 export interface RegionData {
   province: string;
   city: string;
@@ -18,6 +26,14 @@ export interface RegionData {
   minimumMonthlyWage: number;
   dataYear: string;
   source: string;
+  averageSalaryLevel: AverageSalaryLevel;
+  averageSalaryBasis: string;
+  averageSalarySourceUrl: string;
+  averageSalarySourceName: string;
+  minimumWageLevel: MinimumWageLevel;
+  minimumWageEffectiveDate: string;
+  minimumWageSourceUrl: string;
+  minimumWageSourceName: string;
   note?: string;
 }
 

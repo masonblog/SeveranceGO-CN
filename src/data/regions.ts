@@ -1,7 +1,10 @@
-import type { RegionData } from '../types';
+import type { AverageSalaryLevel, MinimumWageLevel, RegionData } from '../types';
 
 const nbsSource = '国家统计局《2024年城镇单位就业人员年平均工资情况》';
-const minWageSource = '人社部全国最低工资标准表（截至2024年10月1日）及各地人社/政府公告';
+const minWageSource = '人社部全国最低工资标准表（截至2026年1月1日）及各地人社/政府公告';
+const nbsSourceUrl = 'https://www.stats.gov.cn/sj/zxfb/202505/t20250516_1959826.html';
+const mohrssMinWageSourceUrl =
+  'https://zwfw.gansu.gov.cn/longnan/tsfw/qyrzyqzq/zczx/xw/art/2026/art_0c16fe86c8cd4e35a89da95a36ebb067.html';
 
 type Area = 'east' | 'central' | 'west' | 'northeast';
 
@@ -9,54 +12,343 @@ interface ProvinceConfig {
   province: string;
   area: Area;
   minimumMonthlyWage: number;
+  minimumWageEffectiveDate?: string;
+  minimumWageSourceUrl?: string;
+  minimumWageLevel?: MinimumWageLevel;
   cities: string[];
 }
 
-const areaAverageMonthlySalary: Record<Area, { amount: number; source: string }> = {
+interface AverageSalaryPreset {
+  amount: number;
+  sourceName: string;
+  sourceUrl: string;
+  level: AverageSalaryLevel;
+  basis: string;
+  description: string;
+}
+
+interface MinimumWagePreset {
+  amount: number;
+  sourceName: string;
+  sourceUrl: string;
+  level: MinimumWageLevel;
+  effectiveDate: string;
+  description: string;
+}
+
+interface RegionOverride {
+  average?: Partial<AverageSalaryPreset> & Pick<AverageSalaryPreset, 'amount' | 'sourceName' | 'sourceUrl' | 'level' | 'basis' | 'description'>;
+  minimum?: Partial<MinimumWagePreset> & Pick<MinimumWagePreset, 'amount' | 'sourceName' | 'sourceUrl' | 'level' | 'effectiveDate' | 'description'>;
+}
+
+const yearlyToMonthly = (amount: number) => Math.round(amount / 12);
+
+const areaAverageMonthlySalary: Record<Area, AverageSalaryPreset> = {
   east: {
     amount: 11976,
-    source: `${nbsSource}：东部地区城镇非私营单位就业人员年平均工资143712元，折算月均11976元`,
+    sourceName: nbsSource,
+    sourceUrl: nbsSourceUrl,
+    level: 'national_region_reference',
+    basis: '城镇非私营单位就业人员年平均工资',
+    description: '东部地区城镇非私营单位就业人员年平均工资143712元，折算月均11976元',
   },
   central: {
     amount: 8174,
-    source: `${nbsSource}：中部地区城镇非私营单位就业人员年平均工资98090元，折算月均8174元`,
+    sourceName: nbsSource,
+    sourceUrl: nbsSourceUrl,
+    level: 'national_region_reference',
+    basis: '城镇非私营单位就业人员年平均工资',
+    description: '中部地区城镇非私营单位就业人员年平均工资98090元，折算月均8174元',
   },
   west: {
     amount: 9198,
-    source: `${nbsSource}：西部地区城镇非私营单位就业人员年平均工资110376元，折算月均9198元`,
+    sourceName: nbsSource,
+    sourceUrl: nbsSourceUrl,
+    level: 'national_region_reference',
+    basis: '城镇非私营单位就业人员年平均工资',
+    description: '西部地区城镇非私营单位就业人员年平均工资110376元，折算月均9198元',
   },
   northeast: {
     amount: 8241,
-    source: `${nbsSource}：东北地区城镇非私营单位就业人员年平均工资98889元，折算月均8241元`,
+    sourceName: nbsSource,
+    sourceUrl: nbsSourceUrl,
+    level: 'national_region_reference',
+    basis: '城镇非私营单位就业人员年平均工资',
+    description: '东北地区城镇非私营单位就业人员年平均工资98889元，折算月均8241元',
   },
 };
 
-const cityOverrides: Record<string, Partial<RegionData>> = {
+const provinceAverageOverrides: Record<string, AverageSalaryPreset> = {
+  山西: {
+    amount: yearlyToMonthly(97781),
+    sourceName: '山西省统计局数据解读（吕梁市政府转载）',
+    sourceUrl: 'https://www.lvliang.gov.cn/zfxxgk/ggsj/sjjd/202506/t20250620_1959745.html',
+    level: 'province_official',
+    basis: '城镇非私营单位就业人员年平均工资',
+    description: '山西省城镇非私营单位就业人员年平均工资97781元，折算月均8148元',
+  },
+  辽宁: {
+    amount: yearlyToMonthly(99069),
+    sourceName: '辽宁省人力资源和社会保障厅、辽宁省统计局统计公报摘要（转载）',
+    sourceUrl: 'https://www.maigoo.com/news/736808.html',
+    level: 'province_official',
+    basis: '城镇非私营单位就业人员年平均工资',
+    description: '辽宁省城镇非私营单位就业人员年平均工资99069元，折算月均8256元；该来源为转载摘要，后续建议替换为官方原文链接',
+  },
+  江苏: {
+    amount: yearlyToMonthly(129220),
+    sourceName: '江苏省统计局《2024年江苏省城镇单位就业人员年平均工资情况》',
+    sourceUrl: 'https://tj.jiangsu.gov.cn/art/2025/6/19/art_87595_11585848.html',
+    level: 'province_official',
+    basis: '城镇非私营单位就业人员年平均工资',
+    description: '江苏省城镇非私营单位就业人员年平均工资129220元，折算月均10768元',
+  },
+  浙江: {
+    amount: yearlyToMonthly(137239),
+    sourceName: '浙江省统计局《浙江省2024年度单位就业人员年平均工资统计公报》',
+    sourceUrl: 'https://tjj.zj.gov.cn/art/2025/6/11/art_1229129205_5528012.html',
+    level: 'province_official',
+    basis: '非私营单位就业人员年平均工资',
+    description: '浙江省非私营单位就业人员年平均工资137239元，折算月均11437元',
+  },
+  安徽: {
+    amount: yearlyToMonthly(105416),
+    sourceName: '安徽省统计局数据（广德市政府互动回应转载）',
+    sourceUrl: 'https://www.guangde.gov.cn/Jczwgk/show/3564527.html',
+    level: 'province_official',
+    basis: '城镇非私营单位就业人员年平均工资',
+    description: '安徽省城镇非私营单位就业人员年平均工资105416元，折算月均8785元',
+  },
+  福建: {
+    amount: yearlyToMonthly(112377),
+    sourceName: '福建省统计局《2024年福建省城镇单位就业人员年平均工资情况》',
+    sourceUrl: 'https://tjj.fujian.gov.cn/xxgk/tjxx/gzqk/202506/t20250612_6924342.htm',
+    level: 'province_official',
+    basis: '城镇非私营单位就业人员年平均工资',
+    description: '福建省城镇非私营单位就业人员年平均工资112377元，折算月均9365元',
+  },
+  山东: {
+    amount: yearlyToMonthly(108131),
+    sourceName: '山东省统计局《2024年城镇单位就业人员年平均工资情况》',
+    sourceUrl: 'https://tjj.shandong.gov.cn/art/2025/7/3/art_6109_10318772.html',
+    level: 'province_official',
+    basis: '城镇非私营单位就业人员年平均工资',
+    description: '山东省城镇非私营单位就业人员年平均工资108131元，折算月均9011元',
+  },
+  河南: {
+    amount: yearlyToMonthly(86199),
+    sourceName: '河南省统计局《2024年河南省城镇单位就业人员年平均工资情况》',
+    sourceUrl: 'https://tjj.henan.gov.cn/2025/06-25/3173720.html',
+    level: 'province_official',
+    basis: '城镇非私营单位就业人员年平均工资',
+    description: '河南省城镇非私营单位就业人员年平均工资86199元，折算月均7183元',
+  },
+  湖南: {
+    amount: yearlyToMonthly(97170),
+    sourceName: '湖南省统计局《2024年湖南省城镇非私营单位就业人员年平均工资97170元》',
+    sourceUrl: 'https://tjj.hunan.gov.cn/hntj/tjfx/jmxx/2025sjjd/202507/t20250722_33746378.html',
+    level: 'province_official',
+    basis: '城镇非私营单位就业人员年平均工资',
+    description: '湖南省城镇非私营单位就业人员年平均工资97170元，折算月均8098元',
+  },
+  广西: {
+    amount: yearlyToMonthly(96547),
+    sourceName: '广西壮族自治区统计局《2024年广西城镇单位就业人员年平均工资情况》',
+    sourceUrl: 'https://tjj.gxzf.gov.cn/qta/sjfbjjda/xwfba/t22621461.shtml',
+    level: 'province_official',
+    basis: '城镇非私营单位就业人员年平均工资',
+    description: '广西城镇非私营单位就业人员年平均工资96547元，折算月均8046元',
+  },
+  海南: {
+    amount: yearlyToMonthly(117433),
+    sourceName: '海南省统计局《海南省2024年城镇单位就业人员年平均工资情况》',
+    sourceUrl: 'https://stats.hainan.gov.cn/tjj/ywdt/xwfb/202507/t20250718_3899217.html',
+    level: 'province_official',
+    basis: '城镇非私营单位就业人员年平均工资',
+    description: '海南省城镇非私营单位就业人员年平均工资117433元，折算月均9786元',
+  },
+  四川: {
+    amount: yearlyToMonthly(110177),
+    sourceName: '四川省统计局《2024年四川省城镇单位就业人员平均工资数据解读》',
+    sourceUrl: 'https://tjj.sc.gov.cn/scstjj/c112118/2025/6/20/f476caad9af8400491990c04f16a4959.shtml',
+    level: 'province_official',
+    basis: '城镇非私营单位就业人员年平均工资',
+    description: '四川省城镇非私营单位就业人员年平均工资110177元，折算月均9181元',
+  },
+};
+
+const subprovinceAverageOverrides: Record<string, AverageSalaryPreset> = {
+  ...Object.fromEntries(
+    ['广州', '深圳', '珠海', '佛山', '惠州', '东莞', '中山', '江门', '肇庆'].map((city) => [
+      `广东-${city}`,
+      {
+        amount: yearlyToMonthly(141588),
+        sourceName: '广东省统计局《2024年广东城镇单位就业人员年平均工资情况》',
+        sourceUrl: 'https://stats.gd.gov.cn/tjkx185/content/post_4730845.html',
+        level: 'subprovince_region_official',
+        basis: '城镇非私营单位分区域就业人员年平均工资',
+        description: '珠三角城镇非私营单位就业人员年平均工资141588元，折算月均11799元',
+      },
+    ]),
+  ),
+  ...Object.fromEntries(
+    ['汕头', '汕尾', '潮州', '揭阳'].map((city) => [
+      `广东-${city}`,
+      {
+        amount: yearlyToMonthly(96854),
+        sourceName: '广东省统计局《2024年广东城镇单位就业人员年平均工资情况》',
+        sourceUrl: 'https://stats.gd.gov.cn/tjkx185/content/post_4730845.html',
+        level: 'subprovince_region_official',
+        basis: '城镇非私营单位分区域就业人员年平均工资',
+        description: '粤东城镇非私营单位就业人员年平均工资96854元，折算月均8071元',
+      },
+    ]),
+  ),
+  ...Object.fromEntries(
+    ['阳江', '湛江', '茂名'].map((city) => [
+      `广东-${city}`,
+      {
+        amount: yearlyToMonthly(105369),
+        sourceName: '广东省统计局《2024年广东城镇单位就业人员年平均工资情况》',
+        sourceUrl: 'https://stats.gd.gov.cn/tjkx185/content/post_4730845.html',
+        level: 'subprovince_region_official',
+        basis: '城镇非私营单位分区域就业人员年平均工资',
+        description: '粤西城镇非私营单位就业人员年平均工资105369元，折算月均8781元',
+      },
+    ]),
+  ),
+  ...Object.fromEntries(
+    ['韶关', '河源', '梅州', '清远', '云浮'].map((city) => [
+      `广东-${city}`,
+      {
+        amount: yearlyToMonthly(101732),
+        sourceName: '广东省统计局《2024年广东城镇单位就业人员年平均工资情况》',
+        sourceUrl: 'https://stats.gd.gov.cn/tjkx185/content/post_4730845.html',
+        level: 'subprovince_region_official',
+        basis: '城镇非私营单位分区域就业人员年平均工资',
+        description: '粤北城镇非私营单位就业人员年平均工资101732元，折算月均8478元',
+      },
+    ]),
+  ),
+  ...Object.fromEntries(
+    ['呼伦贝尔', '兴安盟', '通辽', '赤峰', '锡林郭勒盟'].map((city) => [
+      `内蒙古-${city}`,
+      {
+        amount: yearlyToMonthly(102500),
+        sourceName: '内蒙古自治区人民政府《2024年内蒙古城镇单位就业人员年平均工资情况》',
+        sourceUrl: 'https://www.nmg.gov.cn/tjsj/sjjdfx/202506/t20250624_2745213.html',
+        level: 'subprovince_region_official',
+        basis: '城镇非私营单位分区域就业人员年平均工资',
+        description: '内蒙古东部地区城镇非私营单位就业人员年平均工资102500元，折算月均8542元',
+      },
+    ]),
+  ),
+  ...Object.fromEntries(
+    ['呼和浩特', '包头', '鄂尔多斯', '乌兰察布'].map((city) => [
+      `内蒙古-${city}`,
+      {
+        amount: yearlyToMonthly(120107),
+        sourceName: '内蒙古自治区人民政府《2024年内蒙古城镇单位就业人员年平均工资情况》',
+        sourceUrl: 'https://www.nmg.gov.cn/tjsj/sjjdfx/202506/t20250624_2745213.html',
+        level: 'subprovince_region_official',
+        basis: '城镇非私营单位分区域就业人员年平均工资',
+        description: '内蒙古中部地区城镇非私营单位就业人员年平均工资120107元，折算月均10009元',
+      },
+    ]),
+  ),
+  ...Object.fromEntries(
+    ['巴彦淖尔', '乌海', '阿拉善盟'].map((city) => [
+      `内蒙古-${city}`,
+      {
+        amount: yearlyToMonthly(110058),
+        sourceName: '内蒙古自治区人民政府《2024年内蒙古城镇单位就业人员年平均工资情况》',
+        sourceUrl: 'https://www.nmg.gov.cn/tjsj/sjjdfx/202506/t20250624_2745213.html',
+        level: 'subprovince_region_official',
+        basis: '城镇非私营单位分区域就业人员年平均工资',
+        description: '内蒙古西部地区城镇非私营单位就业人员年平均工资110058元，折算月均9172元',
+      },
+    ]),
+  ),
+};
+
+const cityOverrides: Record<string, RegionOverride> = {
   '北京-北京': {
-    averageMonthlySalary: 11937,
-    source: '北京市人力资源和社会保障局：2024年全口径城镇单位就业人员月平均工资11937元',
+    average: {
+      amount: 11937,
+      sourceName: '北京市人力资源和社会保障局《历年北京市全口径城镇单位就业人员平均工资》',
+      sourceUrl: 'https://rsj.beijing.gov.cn/bm/ywml/202007/t20200717_1950961.html',
+      level: 'city_official',
+      basis: '全口径城镇单位就业人员月平均工资',
+      description: '2024年全口径城镇单位就业人员月平均工资11937元',
+    },
+    minimum: {
+      amount: 2540,
+      sourceName: minWageSource,
+      sourceUrl: mohrssMinWageSourceUrl,
+      level: 'city_or_county_mapped',
+      effectiveDate: '2026-01-01',
+      description: '人社部截至2026年1月1日最低工资标准表：北京月最低工资标准2540元',
+    },
   },
   '天津-天津': {
-    averageMonthlySalary: 11870,
-    source: '天津市统计局：2024年城镇非私营单位就业人员年平均工资142437元，折算月均11870元',
+    average: {
+      amount: yearlyToMonthly(142437),
+      sourceName: '天津市统计局《2024年天津市城镇单位就业人员年平均工资情况》',
+      sourceUrl: 'https://stats.tj.gov.cn/sy_51953/jjxx/202506/t20250606_6948917.html',
+      level: 'city_official',
+      basis: '城镇非私营单位就业人员年平均工资',
+      description: '城镇非私营单位就业人员年平均工资142437元，折算月均11870元',
+    },
   },
-  '四川-成都': {
-    averageMonthlySalary: 9181,
-    source: '四川省统计局：2024年城镇非私营单位就业人员年平均工资110177元，折算月均9181元',
+  '上海-上海': {
+    minimum: {
+      amount: 2740,
+      sourceName: '上海市人力资源和社会保障局《关于调整本市最低工资标准的通知》',
+      sourceUrl: 'https://rsj.sh.gov.cn/cmsres/2c/2c52da60c7ed423c949a1a8524195c92/4221087aea40a7da06e928da75ab2369.pdf',
+      level: 'city_or_county_mapped',
+      effectiveDate: '2025-07-01',
+      description: '上海市月最低工资标准自2025年7月1日起调整为2740元',
+    },
+  },
+  '河北-石家庄': {
+    average: {
+      amount: yearlyToMonthly(105681),
+      sourceName: '石家庄市统计局《2024年石家庄市城镇单位就业人员平均工资》',
+      sourceUrl: 'https://www.sjz.gov.cn/columns/8c386b31-ef4d-4b27-8279-d8f526de8191/202506/27/5e28378c-00d2-4270-b732-7ffe759897f0.html',
+      level: 'city_official',
+      basis: '城镇非私营单位就业人员年平均工资',
+      description: '石家庄市（不含辛集市）城镇非私营单位就业人员年平均工资105681元，折算月均8807元',
+    },
+  },
+  '广东-深圳': {
+    minimum: {
+      amount: 2520,
+      sourceName: minWageSource,
+      sourceUrl: mohrssMinWageSourceUrl,
+      level: 'city_or_county_mapped',
+      effectiveDate: '2026-01-01',
+      description: '人社部截至2026年1月1日最低工资标准表：深圳月最低工资标准2520元',
+    },
   },
   '云南-昆明': {
-    minimumMonthlyWage: 2070,
-    source: '中国就业网转载云南人社调整通知：昆明主城区2024年10月起月最低工资2070元；平均工资暂用国家统计局西部地区2024区域口径',
+    minimum: {
+      amount: 2070,
+      sourceName: '中国就业网转载云南人社调整通知',
+      sourceUrl: 'https://chinajob.mohrss.gov.cn/c/2024-08-27/413892.shtml',
+      level: 'city_or_county_mapped',
+      effectiveDate: '2024-10-01',
+      description: '昆明主城区2024年10月起月最低工资2070元',
+    },
   },
 };
 
 const note =
-  '已补全各省级行政区下的地级行政区选项。公开渠道未统一发布城市级2024平均工资的城市，暂用国家统计局2024分区域官方工资口径作为封顶参考；最低工资按省级一档或已检索到的城市档位预置，正式上线前建议按具体区县复核。';
+  '已补全各省级行政区下的地级行政区选项。未检索到城市级2024官方平均工资的城市，会按省级、官方片区或国家区域参考口径预填；最低工资按当前已核验到的人社部全国表及地方公告预置，省内多档地区仍建议按具体区县复核。';
 
 const provinceConfigs: ProvinceConfig[] = [
-  { province: '北京', area: 'east', minimumMonthlyWage: 2420, cities: ['北京'] },
+  { province: '北京', area: 'east', minimumMonthlyWage: 2540, minimumWageEffectiveDate: '2026-01-01', cities: ['北京'] },
   { province: '天津', area: 'east', minimumMonthlyWage: 2320, cities: ['天津'] },
-  { province: '上海', area: 'east', minimumMonthlyWage: 2690, cities: ['上海'] },
+  { province: '上海', area: 'east', minimumMonthlyWage: 2740, minimumWageEffectiveDate: '2025-07-01', cities: ['上海'] },
   { province: '重庆', area: 'west', minimumMonthlyWage: 2100, cities: ['重庆'] },
   {
     province: '河北',
@@ -97,13 +389,15 @@ const provinceConfigs: ProvinceConfig[] = [
   {
     province: '江苏',
     area: 'east',
-    minimumMonthlyWage: 2490,
+    minimumMonthlyWage: 2660,
+    minimumWageEffectiveDate: '2026-01-01',
     cities: ['南京', '无锡', '徐州', '常州', '苏州', '南通', '连云港', '淮安', '盐城', '扬州', '镇江', '泰州', '宿迁'],
   },
   {
     province: '浙江',
     area: 'east',
-    minimumMonthlyWage: 2490,
+    minimumMonthlyWage: 2660,
+    minimumWageEffectiveDate: '2026-01-01',
     cities: ['杭州', '宁波', '温州', '嘉兴', '湖州', '绍兴', '金华', '衢州', '舟山', '台州', '丽水'],
   },
   {
@@ -151,7 +445,8 @@ const provinceConfigs: ProvinceConfig[] = [
   {
     province: '广东',
     area: 'east',
-    minimumMonthlyWage: 2300,
+    minimumMonthlyWage: 2500,
+    minimumWageEffectiveDate: '2026-01-01',
     cities: ['广州', '韶关', '深圳', '珠海', '汕头', '佛山', '江门', '湛江', '茂名', '肇庆', '惠州', '梅州', '汕尾', '河源', '阳江', '清远', '东莞', '中山', '潮州', '揭阳', '云浮'],
   },
   {
@@ -224,21 +519,37 @@ const provinceConfigs: ProvinceConfig[] = [
 
 const buildRegion = (config: ProvinceConfig, city: string): RegionData => {
   const key = `${config.province}-${city}`;
-  const areaAverage = areaAverageMonthlySalary[config.area];
-  const override = cityOverrides[key] ?? {};
-  const averageMonthlySalary = override.averageMonthlySalary ?? areaAverage.amount;
-  const minimumMonthlyWage = override.minimumMonthlyWage ?? config.minimumMonthlyWage;
-  const source = override.source
-    ? `${override.source}；最低工资：${minWageSource}。`
-    : `${areaAverage.source}；最低工资：${minWageSource}。`;
+  const average =
+    cityOverrides[key]?.average ??
+    subprovinceAverageOverrides[key] ??
+    provinceAverageOverrides[config.province] ??
+    areaAverageMonthlySalary[config.area];
+  const minimum =
+    cityOverrides[key]?.minimum ?? {
+      amount: config.minimumMonthlyWage,
+      sourceName: minWageSource,
+      sourceUrl: config.minimumWageSourceUrl ?? mohrssMinWageSourceUrl,
+      level: config.minimumWageLevel ?? 'province_grade_reference',
+      effectiveDate: config.minimumWageEffectiveDate ?? '2026-01-01',
+      description: `${config.province}月最低工资标准按当前已核验省级第一档或项目既有档位预置，省内多档地区需按具体区县复核`,
+    };
+  const source = `平均工资：${average.sourceName}：${average.description}。最低工资：${minimum.sourceName}：${minimum.description}。`;
 
   return {
     province: config.province,
     city,
-    averageMonthlySalary,
-    minimumMonthlyWage,
+    averageMonthlySalary: average.amount,
+    minimumMonthlyWage: minimum.amount,
     dataYear: '2024',
     source,
+    averageSalaryLevel: average.level,
+    averageSalaryBasis: average.basis,
+    averageSalarySourceUrl: average.sourceUrl,
+    averageSalarySourceName: average.sourceName,
+    minimumWageLevel: minimum.level,
+    minimumWageEffectiveDate: minimum.effectiveDate,
+    minimumWageSourceUrl: minimum.sourceUrl,
+    minimumWageSourceName: minimum.sourceName,
     note,
   };
 };
