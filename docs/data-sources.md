@@ -22,6 +22,10 @@
   https://www.lvliang.gov.cn/zfxxgk/ggsj/sjjd/202506/t20250620_1959745.html
 - 辽宁省人力资源和社会保障厅、辽宁省统计局统计公报摘要（转载，后续建议替换为官方原文）
   https://www.maigoo.com/news/736808.html
+- 黑龙江省统计局：2024年城镇非私营单位就业人员平均工资情况
+  https://tjj.hlj.gov.cn/tjj/c106736/202506/c00_31850581.shtml
+- 上海统计年鉴2025：表2.23 城镇单位就业人员平均工资（2021～2024）
+  https://tjj.sh.gov.cn/tjnj/tjnj2025.htm
 - 江苏省统计局：2024年江苏省城镇单位就业人员年平均工资情况
   https://tj.jiangsu.gov.cn/art/2025/6/19/art_87595_11585848.html
 - 浙江省统计局：浙江省2024年度单位就业人员年平均工资统计公报
@@ -42,10 +46,26 @@
   https://tjj.gxzf.gov.cn/qta/sjfbjjda/xwfba/t22621461.shtml
 - 海南省统计局：海南省2024年城镇单位就业人员年平均工资情况
   https://stats.hainan.gov.cn/tjj/ywdt/xwfb/202507/t20250718_3899217.html
+- 重庆市统计局：2024年重庆市城镇单位就业人员年平均工资情况
+  https://tjj.cq.gov.cn/zwgk_233/fdzdgknr/tjxx/sjjd_55469/202506/t20250620_14731980.html
 - 内蒙古自治区人民政府：2024年内蒙古城镇单位就业人员年平均工资情况
   https://www.nmg.gov.cn/tjsj/sjjdfx/202506/t20250624_2745213.html
 - 四川省统计局：2024年全省城镇单位就业人员平均工资
   https://tjj.sc.gov.cn/scstjj/c112118/2025/6/20/f476caad9af8400491990c04f16a4959.shtml
+- 贵州省人力资源和社会保障厅等四部门：关于公布2024年贵州省全口径城镇单位就业人员年平均工资的通知
+  https://rst.guizhou.gov.cn/zwgk/jdhy/zcwj/202509/t20250919_88635347.html
+- 云南省统计局：2024年云南省城镇单位就业人员年平均工资情况
+  https://stats.yn.gov.cn/Pages_143_7032.aspx
+- 陕西省人民政府：2024年陕西省非私营单位就业人员年平均工资111921元
+  https://www.shaanxi.gov.cn/sj/zxfb/202506/t20250606_3528962.html
+- 兰州本地宝：甘肃省平均工资标准（历年汇总，转载，后续建议替换为官方原文）
+  https://m.lz.bendibao.com/live/62529.shtm
+- 买购网：2024年青海省平均工资数据（转载，后续建议替换为官方原文）
+  https://www.maigoo.com/news/736753.html
+- 宁夏回族自治区发展和改革委员会转载自治区统计局：2024年全区城镇单位就业人员年平均工资情况
+  https://fzggw.nx.gov.cn/sjfb/yxfx/202507/t20250707_4953737.html
+- 媒体转载新疆维吾尔自治区统计局：2024年新疆城镇单位就业人员平均工资发布（后续建议替换为官方原文）
+  https://sdxw.iqilu.com/share/YS0yMS0xNjU5OTU4Ng%3D%3D.html
 - 人社部全国最低工资标准表（截至 2026 年 1 月 1 日，政府转载页）
   https://zwfw.gansu.gov.cn/longnan/tsfw/qyrzyqzq/zczx/xw/art/2026/art_0c16fe86c8cd4e35a89da95a36ebb067.html
 - 上海市人力资源和社会保障局：关于调整本市最低工资标准的通知
