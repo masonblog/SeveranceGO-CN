@@ -21,6 +21,7 @@ VITE_SUPABASE_ANON_KEY=...
 ```bash
 corepack pnpm test
 corepack pnpm build
+corepack pnpm deploy:cloudflare
 ```
 
 ## Supabase
@@ -68,7 +69,9 @@ notify pgrst, 'reload schema';
 
 - workflow 文件：`.github/workflows/deploy.yml`
 - 触发方式：推送到 `main` 或 `master`，也可手动 `workflow_dispatch`
-- 部署目标：GitHub Pages
+- 部署目标：GitHub Pages，以及 Cloudflare Workers 备份站点 `https://severance.masonhu.xyz`
+
+### GitHub Pages
 
 你需要在 GitHub 仓库中手动完成：
 
@@ -79,3 +82,22 @@ notify pgrst, 'reload schema';
 3. 确认 Supabase 已执行 `supabase/schema.sql`，并且 RLS 插入策略存在。
 
 注意：这两个值需要配置为仓库级 `Repository secrets`。如果只配置在 GitHub Pages environment 里，构建步骤可能读取不到，页面提交时会出现 `No API key found in request`。
+
+### Cloudflare Workers
+
+Cloudflare Workers 使用 `wrangler.jsonc` 中的 Workers Static Assets 配置部署 `dist`，并将未命中的前端路由回退到 `index.html`。
+
+你需要确认：
+
+1. `masonhu.xyz` 已托管在 Cloudflare，并且当前 Cloudflare 账号有权限管理该 zone。
+2. GitHub 仓库 `Settings` -> `Secrets and variables` -> `Actions` 中新增：
+   - `CLOUDFLARE_API_TOKEN`
+   - `CLOUDFLARE_ACCOUNT_ID`
+3. `CLOUDFLARE_API_TOKEN` 至少需要有部署 Workers、编辑 Workers routes/custom domains，以及读取对应 zone 的权限。
+
+完成后，推送到 `main` 或 `master` 会同时部署：
+
+- GitHub Pages：`https://masonblog.github.io/SeveranceGO-CN/`
+- Cloudflare Workers：`https://severance.masonhu.xyz`
+
+如果 Cloudflare secrets 尚未配置，GitHub Pages 仍会正常部署，Cloudflare job 会跳过。
