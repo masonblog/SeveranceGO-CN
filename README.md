@@ -10,6 +10,8 @@
 
 **[开始使用](https://masonblog.github.io/SeveranceGO-CN/)**
 
+---
+
 ## 功能
 
 - 单页响应式表单，提交后展示计算结果。
