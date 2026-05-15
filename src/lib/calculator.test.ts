@@ -9,6 +9,14 @@ const region: RegionData = {
   minimumMonthlyWage: 2000,
   dataYear: 'test',
   source: 'test',
+  averageSalaryLevel: 'city_official',
+  averageSalaryBasis: '测试平均工资口径',
+  averageSalarySourceUrl: 'https://example.com/average',
+  averageSalarySourceName: '测试平均工资来源',
+  minimumWageLevel: 'city_or_county_mapped',
+  minimumWageEffectiveDate: '2026-01-01',
+  minimumWageSourceUrl: 'https://example.com/minimum',
+  minimumWageSourceName: '测试最低工资来源',
 };
 
 const baseForm: SeveranceForm = {
