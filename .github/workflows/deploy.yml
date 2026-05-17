@@ -69,7 +69,7 @@ jobs:
           path: dist
           if-no-files-found: error
 
-  deploy:
+  deploy-github:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
