@@ -1,0 +1,185 @@
+<scroll-view class="page" scroll-y type="list">
+  <view class="hero">
+    <text class="eyebrow">SeveranceGO-CN</text>
+    <text class="title">离职补偿金计算工具</text>
+    <text class="subtitle">按《劳动合同法》常见解除、终止和未签书面合同规则，快速估算一次性补偿、赔偿和代通知金。</text>
+  </view>
+
+  <view class="panel">
+    <view class="section-title">职业信息</view>
+    <view class="field">
+      <text class="label">实际入职时间 *</text>
+      <picker mode="date" value="{{form.startDate}}" data-key="startDate" bindchange="onDateChange">
+        <view class="picker">{{form.startDate || '请选择日期'}}</view>
+      </picker>
+      <text wx:if="{{errors.startDate}}" class="error">{{errors.startDate}}</text>
+    </view>
+
+    <view class="field">
+      <text class="label">离职/预计离职时间 *</text>
+      <picker mode="date" value="{{form.endDate}}" data-key="endDate" bindchange="onDateChange">
+        <view class="picker">{{form.endDate || '请选择日期'}}</view>
+      </picker>
+      <text wx:if="{{errors.endDate}}" class="error">{{errors.endDate}}</text>
+    </view>
+
+    <view class="field">
+      <text class="label">上一自然年度总收入（元） *</text>
+      <text class="helper">建议从《个人所得税》APP 的“收入纳税明细”中直接查看年度收入。</text>
+      <input class="input" type="number" value="{{form.previousYearIncome || ''}}" data-key="previousYearIncome" placeholder="请输入金额" bindinput="onMoneyInput" />
+      <text wx:if="{{errors.previousYearIncome}}" class="error">{{errors.previousYearIncome}}</text>
+    </view>
+
+    <view class="field">
+      <text class="label">劳动合同履行地 *</text>
+      <text class="helper">实际工作地点与用人单位注册地不一致时，以实际工作地点为准。</text>
+      <view class="picker-row">
+        <picker class="picker-col" mode="selector" range="{{provinceOptions}}" value="{{provinceIndex}}" bindchange="onProvinceChange">
+          <view class="picker">{{form.province}}</view>
+        </picker>
+        <picker class="picker-col" mode="selector" range="{{cityOptions}}" value="{{cityIndex}}" bindchange="onCityChange">
+          <view class="picker">{{form.city}}</view>
+        </picker>
+      </view>
+      <text wx:if="{{errors.province || errors.city}}" class="error">{{errors.province || errors.city}}</text>
+    </view>
+
+    <view class="region-box">
+      <text class="region-title">{{regionView.title}}</text>
+      <text class="region-subtitle">2024 年平均工资 / 最新最低工资口径</text>
+      <view class="source-line">
+        <text class="tag">{{regionView.averageLabel}}</text>
+        <text>{{regionView.averageText}}</text>
+      </view>
+      <text class="source">来源：{{regionView.averageSource}}</text>
+      <view class="source-line">
+        <text class="tag">{{regionView.minimumLabel}}</text>
+        <text>{{regionView.minimumText}}</text>
+      </view>
+      <text class="source">来源：{{regionView.minimumSource}}</text>
+      <text wx:if="{{regionView.caution}}" class="caution">{{regionView.caution}}</text>
+      <text wx:if="{{regionView.note}}" class="source">{{regionView.note}}</text>
+    </view>
+
+    <view class="field">
+      <text class="label">经济补偿封顶口径：当地上年度职工月平均工资（可覆盖）</text>
+      <input class="input" type="number" value="{{form.averageMonthlySalaryOverride}}" data-key="averageMonthlySalaryOverride" placeholder="不填则使用地区预设" bindinput="onOptionalMoneyInput" />
+      <text wx:if="{{errors.averageMonthlySalaryOverride}}" class="error">{{errors.averageMonthlySalaryOverride}}</text>
+    </view>
+
+    <view class="field">
+      <text class="label">当地最低工资标准（可覆盖）</text>
+      <input class="input" type="number" value="{{form.minimumMonthlyWageOverride}}" data-key="minimumMonthlyWageOverride" placeholder="不填则使用地区预设" bindinput="onOptionalMoneyInput" />
+      <text wx:if="{{errors.minimumMonthlyWageOverride}}" class="error">{{errors.minimumMonthlyWageOverride}}</text>
+    </view>
+  </view>
+
+  <view class="panel">
+    <view class="section-title">合同信息</view>
+    <view class="segmented">
+      <button class="seg-button {{form.hasWrittenContract ? 'active' : ''}}" data-value="true" bindtap="setWrittenContract">已签书面合同</button>
+      <button class="seg-button {{!form.hasWrittenContract ? 'active' : ''}}" data-value="false" bindtap="setWrittenContract">未签书面合同</button>
+    </view>
+    <view wx:if="{{form.hasWrittenContract}}" class="field">
+      <text class="label">书面合同签订时间 *</text>
+      <picker mode="date" value="{{form.contractSignedDate}}" data-key="contractSignedDate" bindchange="onDateChange">
+        <view class="picker">{{form.contractSignedDate || '请选择日期'}}</view>
+      </picker>
+      <text wx:if="{{errors.contractSignedDate}}" class="error">{{errors.contractSignedDate}}</text>
+    </view>
+  </view>
+
+  <view class="panel">
+    <view class="section-title">离职情况</view>
+    <block wx:for="{{terminationGroupsView}}" wx:key="title">
+      <view class="reason-group {{item.isActive ? 'active' : ''}}">
+        <view class="reason-toggle" data-title="{{item.title}}" bindtap="toggleGroup">
+          <view>
+            <text class="reason-title">{{item.title}}</text>
+            <text class="reason-desc">{{item.selectedText}}</text>
+          </view>
+          <text class="chevron">{{item.isExpanded ? '收起' : '展开'}}</text>
+        </view>
+        <view wx:if="{{item.isExpanded}}" class="reason-options">
+          <block wx:for="{{item.options}}" wx:key="value" wx:for-item="option">
+            <view class="choice {{option.isSelected ? 'active' : ''}}">
+              <view data-value="{{option.value}}" bindtap="setTerminationReason">
+                <text class="choice-title">{{option.label}}</text>
+                <text class="choice-hint">{{option.hint}}</text>
+              </view>
+              <view wx:if="{{option.showForcedFollowUp}}" class="follow-up">
+                <view class="field compact">
+                  <text class="label">公司存在的问题</text>
+                  <input class="input" value="{{form.forcedReason}}" data-key="forcedReason" placeholder="例如：欠薪、未缴社保、违法调岗降薪" bindinput="onTextInput" />
+                </view>
+                <view class="switch-line">
+                  <text>涉及调岗、降薪或岗位安排变化</text>
+                  <switch checked="{{form.hasPayCutOrTransfer}}" data-key="hasPayCutOrTransfer" bindchange="onSwitchChange" />
+                </view>
+              </view>
+              <view wx:if="{{option.showArticle40FollowUp}}" class="follow-up">
+                <view class="switch-line">
+                  <text>公司没有提前 30 天书面通知</text>
+                  <switch checked="{{form.article40NoNotice}}" data-key="article40NoNotice" bindchange="onSwitchChange" />
+                </view>
+              </view>
+            </view>
+          </block>
+        </view>
+      </view>
+    </block>
+    <view class="selected-reason">
+      <text>当前选择</text>
+      <text class="selected-title">{{selectedReason.label}}</text>
+      <text>{{selectedReason.hint}}</text>
+    </view>
+  </view>
+
+  <button class="submit" bindtap="calculate">本地计算</button>
+
+  <view class="result-panel">
+    <view class="section-title">估算结果</view>
+    <view wx:if="{{resultView}}">
+      <view class="total-box">
+        <text>预计一次性金额区间</text>
+        <text class="total">{{resultView.totalRange}}</text>
+        <text>{{resultView.summary}}</text>
+      </view>
+      <view class="metric-row">
+        <view class="metric">
+          <text>折算月工资</text>
+          <text>{{resultView.baseMonthlySalary}}</text>
+        </view>
+        <view class="metric">
+          <text>计补偿基数</text>
+          <text>{{resultView.adjustedMonthlySalary}}</text>
+        </view>
+      </view>
+      <block wx:for="{{resultView.lines}}" wx:key="label">
+        <view class="line-item">
+          <view>
+            <text class="line-title">{{item.label}}</text>
+            <text class="line-note">{{item.note}}</text>
+          </view>
+          <text class="line-amount">{{item.amountText}}</text>
+        </view>
+      </block>
+      <view class="info-list">
+        <text class="info-title">适用规则</text>
+        <text wx:for="{{resultView.rules}}" wx:key="*this" class="info-item">• {{item}}</text>
+      </view>
+      <view class="info-list warning">
+        <text class="info-title">风险提示</text>
+        <text wx:for="{{resultView.warnings}}" wx:key="*this" class="info-item">• {{item}}</text>
+      </view>
+      <view class="info-list">
+        <text class="info-title">未计入但建议核查</text>
+        <text wx:for="{{resultView.checklist}}" wx:key="*this" class="info-item">• {{item}}</text>
+      </view>
+      <text class="disclaimer">本工具仅供初步估算，不替代律师、仲裁机构或法院的个案判断。</text>
+    </view>
+    <view wx:else class="result-empty">
+      <text>{{resultMessage}}</text>
+    </view>
+  </view>
+</scroll-view>

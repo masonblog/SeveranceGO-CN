@@ -1,103 +1,48 @@
 # SeveranceGO-CN 开发说明
 
-本文档记录本地运行、Supabase 配置和自动部署流程。
+本文档记录微信小程序版的本地开发、校验和上线前注意事项。
 
-## 本地运行
+## 本地开发
 
 ```bash
 corepack pnpm install
-corepack pnpm dev
-```
-
-复制 `.env.example` 为 `.env.local`，填入 Supabase 项目的 URL 和 anon public key：
-
-```bash
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_ANON_KEY=...
-```
-
-常用命令：
-
-```bash
 corepack pnpm test
 corepack pnpm build
-corepack pnpm deploy:cloudflare
 ```
 
-## Supabase
+`corepack pnpm build` 只执行 TypeScript 类型检查。小程序预览、真机调试和上传请使用微信开发者工具打开项目根目录。
 
-在 Supabase SQL Editor 中执行：
+## 微信开发者工具
 
-```sql
--- supabase/schema.sql
-```
+- 项目类型：小程序
+- 项目目录：仓库根目录
+- AppID：`project.config.json` 默认是 `touristappid`
+- 上线前：替换真实 AppID，并确认类目、备案、隐私指引、用户协议等微信公众平台配置
 
-该脚本会创建 `severance_submissions` 表，并启用 Row Level Security。匿名用户仅允许插入，不允许公开读取。
+当前版本不使用网络请求，不依赖 Supabase、云开发、登录、订阅消息或支付能力。
 
-提交数据会同时保存两种形态：
+## 代码结构
 
-- 独立列：入职时间、离职时间、合同信息、收入、地区、解除原因代码、解除原因中文标签、解除原因分组、咨询联系方式等，方便在 Supabase Table Editor 里查看和导出。
-- JSON 备份：`form_payload` 保存完整原始表单，`calculation_result` 保存完整计算结果，方便后续排查或二次分析。
+- `app.json`、`app.ts`、`app.wxss`：小程序全局配置和样式
+- `pages/index/`：首页表单、交互和结果展示
+- `src/lib/calculator.ts`：核心计算逻辑和法律口径版本
+- `src/lib/validation.ts`：表单校验
+- `src/lib/termination.ts`：离职原因分组和说明
+- `src/data/regions.ts`：地区工资数据和来源元信息
+- `src/**/*.test.ts`、`src/data/*.test.ts`：Vitest 测试
 
-如果部署页面提交时报 `rest/v1/severance_submissions 404`，通常表示当前 Supabase 项目还没有执行建表脚本，或 REST API schema cache 尚未刷新。请确认：
+## 验证要求
 
-- GitHub Actions 中的 `VITE_SUPABASE_URL` 指向的就是你执行 SQL 的同一个 Supabase 项目。
-- 在该项目的 SQL Editor 里完整执行 `supabase/schema.sql`，包括 `grant` 和 RLS policy。
-- 执行后等待几十秒再刷新部署页面重试；必要时到 Supabase `Project Settings` -> `API` 确认 `public` schema 对 API 暴露。
+- 计算规则变化：更新 `src/lib/calculator.test.ts`
+- 地区数据、城市覆盖或来源元信息变化：更新 `src/data/regions.test.ts` 和 `docs/data-sources.md`
+- 校验逻辑变化：更新 `src/lib/validation.test.ts`
+- 交互或样式变化：运行 `corepack pnpm build`，并在微信开发者工具里手动检查首页流程
 
-如果部署页面提交时报 `Could not find the 'article40_no_notice' column of 'severance_submissions' in the schema cache`，表示线上 Supabase 表缺少最新字段，或字段刚添加但 REST API schema cache 还没刷新。处理方式：
+## 上线前检查
 
-```sql
-alter table public.severance_submissions
-  add column if not exists article40_no_notice boolean not null default false;
-
-notify pgrst, 'reload schema';
-```
-
-执行后等待几十秒，再刷新部署页面提交。
-
-环境变量获取位置：
-
-- `VITE_SUPABASE_URL`：Supabase 项目 `Project Settings` -> `API` -> `Project URL`
-- `VITE_SUPABASE_ANON_KEY`：Supabase 项目 `Project Settings` -> `API` -> `Project API keys` -> `anon public`
-
-不要把 `service_role` key 放进前端或 GitHub Pages。
-
-## 自动部署
-
-项目已配置 GitHub Actions：
-
-- workflow 文件：`.github/workflows/deploy.yml`
-- 触发方式：推送到 `main` 或 `master`，也可手动 `workflow_dispatch`
-- 部署目标：GitHub Pages，以及 Cloudflare Workers 备份站点 `https://severance.masonhu.xyz`
-
-### GitHub Pages
-
-你需要在 GitHub 仓库中手动完成：
-
-1. `Settings` -> `Pages` -> `Build and deployment`，将 `Source` 设为 `GitHub Actions`。
-2. `Settings` -> `Secrets and variables` -> `Actions`，新增：
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-3. 确认 Supabase 已执行 `supabase/schema.sql`，并且 RLS 插入策略存在。
-
-注意：这两个值需要配置为仓库级 `Repository secrets`。如果只配置在 GitHub Pages environment 里，构建步骤可能读取不到，页面提交时会出现 `No API key found in request`。
-
-### Cloudflare Workers
-
-Cloudflare Workers 使用 `wrangler.jsonc` 中的 Workers Static Assets 配置部署 `dist`，并将未命中的前端路由回退到 `index.html`。
-
-你需要确认：
-
-1. `masonhu.xyz` 已托管在 Cloudflare，并且当前 Cloudflare 账号有权限管理该 zone。
-2. GitHub 仓库 `Settings` -> `Secrets and variables` -> `Actions` 中新增：
-   - `CLOUDFLARE_API_TOKEN`
-   - `CLOUDFLARE_ACCOUNT_ID`
-3. `CLOUDFLARE_API_TOKEN` 至少需要有部署 Workers、编辑 Workers routes/custom domains，以及读取对应 zone 的权限。
-
-完成后，推送到 `main` 或 `master` 会同时部署：
-
-- GitHub Pages：`https://masonblog.github.io/SeveranceGO-CN/`
-- Cloudflare Workers：`https://severance.masonhu.xyz`
-
-如果 Cloudflare secrets 尚未配置，GitHub Pages 仍会正常部署，Cloudflare job 会跳过。
+- `corepack pnpm test` 通过
+- `corepack pnpm build` 通过
+- 微信开发者工具编译通过
+- 真机检查日期、金额、地区、合同和离职原因输入
+- 确认页面没有手机号、微信号、咨询提交或第三方网络请求
+- 确认免责声明仍清晰可见

@@ -53,10 +53,6 @@ export interface SeveranceForm {
   hasPayCutOrTransfer: boolean;
   isMassLayoff: boolean;
   article40NoNotice: boolean;
-  needsConsultation: boolean;
-  phone: string;
-  wechat: string;
-  consultationNote: string;
 }
 
 export interface CalculationLine {

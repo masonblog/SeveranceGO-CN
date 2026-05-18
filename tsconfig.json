@@ -14,7 +14,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "types": ["miniprogram-api-typings"]
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["app.ts", "pages/**/*.ts", "src/**/*.ts"]
 }

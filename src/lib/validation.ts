@@ -31,8 +31,6 @@ export const validateForm = (form: SeveranceForm) => {
   if (form.previousYearIncome === 0) errors.previousYearIncome = '请填写上一年度总收入。';
   if (Number(form.averageMonthlySalaryOverride) < 0) errors.averageMonthlySalaryOverride = '社平工资不能为负数。';
   if (Number(form.minimumMonthlyWageOverride) < 0) errors.minimumMonthlyWageOverride = '最低工资不能为负数。';
-  if (form.needsConsultation && !form.phone.trim()) errors.phone = '选择免费法律咨询时，手机号必填。';
-  if (form.phone && !/^1[3-9]\d{9}$/.test(form.phone.trim())) errors.phone = '请输入有效的中国大陆手机号。';
 
   return errors;
 };

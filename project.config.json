@@ -1,0 +1,63 @@
+{
+  "appid": "touristappid",
+  "compileType": "miniprogram",
+  "libVersion": "latest",
+  "miniprogramRoot": "./",
+  "packOptions": {
+    "ignore": [
+      {
+        "type": "folder",
+        "value": ".git"
+      },
+      {
+        "type": "folder",
+        "value": "docs"
+      },
+      {
+        "type": "folder",
+        "value": "node_modules"
+      },
+      {
+        "type": "folder",
+        "value": ".pnpm-store"
+      },
+      {
+        "type": "suffix",
+        "value": ".test.ts"
+      },
+      {
+        "type": "file",
+        "value": "README.md"
+      },
+      {
+        "type": "file",
+        "value": "README_dev.md"
+      },
+      {
+        "type": "file",
+        "value": "AGENTS.MD"
+      },
+      {
+        "type": "file",
+        "value": "pnpm-lock.yaml"
+      },
+      {
+        "type": "file",
+        "value": "pnpm-workspace.yaml"
+      }
+    ]
+  },
+  "projectname": "SeveranceGO-CN",
+  "setting": {
+    "coverView": true,
+    "es6": true,
+    "enhance": true,
+    "minified": true,
+    "postcss": true,
+    "typescript": true,
+    "useCompilerPlugins": [
+      "typescript"
+    ],
+    "urlCheck": true
+  }
+}

@@ -35,10 +35,6 @@ const baseForm: SeveranceForm = {
   hasPayCutOrTransfer: false,
   isMassLayoff: false,
   article40NoNotice: false,
-  needsConsultation: false,
-  phone: '',
-  wechat: '',
-  consultationNote: '',
 };
 
 describe('calculator', () => {
