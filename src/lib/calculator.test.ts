@@ -96,6 +96,12 @@ describe('calculator', () => {
     expect(doubleWageLine?.amount).toBeLessThanOrEqual(30000);
   });
 
+  it('grants N with a renewal-refusal warning for contract expiry', () => {
+    const result = calculateSeverance({ ...baseForm, terminationReason: 'contract_end' }, region);
+    expect(result.lines[0].amount).toBe(35000);
+    expect(result.warnings.some((warning) => warning.includes('拒绝续签'))).toBe(true);
+  });
+
   it('caps uncontracted months near eleven months', () => {
     const result = calculateSeverance(
       {
