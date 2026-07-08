@@ -134,6 +134,10 @@ export const calculateSeverance = (form: SeveranceForm, region: RegionData): Cal
     warnings.push('经济性裁员还需关注提前说明、听取意见、向劳动行政部门报告等程序要求。');
   }
 
+  if (form.terminationReason === 'contract_end') {
+    warnings.push('合同到期终止时，若单位维持或提高原条件续签而你拒绝续签，通常没有经济补偿；当前按单位不续签或降低条件续签的情形估算。');
+  }
+
   const checklist = ['未休年假工资', '加班费', '拖欠工资', '社保/公积金补缴', '竞业限制补偿'];
   const total = roundCurrency(lines.reduce((sum, line) => sum + line.amount, 0));
   const uncertaintyBuffer = total > 0 ? Math.max(adjustedMonthlySalary * 0.5, total * 0.08) : 0;

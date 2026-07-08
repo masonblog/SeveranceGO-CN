@@ -461,36 +461,6 @@ function TextInput({
   );
 }
 
-function SelectInput({
-  label,
-  value,
-  options,
-  onChange,
-  required = false,
-  error,
-}: {
-  label: string;
-  value: string;
-  options: Array<{ key: string; label: string }>;
-  onChange: (value: string) => void;
-  required?: boolean;
-  error?: string;
-}) {
-  return (
-    <label className="field">
-      <FieldLabel label={label} required={required} />
-      <select value={value} onChange={(event) => onChange(event.target.value)}>
-        {options.map((option) => (
-          <option key={option.key} value={option.key}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      {error && <em>{error}</em>}
-    </label>
-  );
-}
-
 function RegionSelect({
   province,
   city,

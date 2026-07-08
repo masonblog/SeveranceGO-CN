@@ -67,6 +67,59 @@ check (
   and not (form_payload ? 'employerName')
 ) not valid;
 
+alter table public.severance_submissions
+drop constraint if exists severance_submissions_phone_format;
+
+alter table public.severance_submissions
+add constraint severance_submissions_phone_format
+check (phone is null or phone ~ '^1[3-9][0-9]{9}$') not valid;
+
+create index if not exists severance_submissions_created_at_idx
+  on public.severance_submissions (created_at);
+
+create index if not exists severance_submissions_phone_created_at_idx
+  on public.severance_submissions (phone, created_at)
+  where phone is not null;
+
+-- 匿名角色只有 insert 权限，函数需 security definer 才能统计近期提交量。
+create or replace function public.enforce_severance_submission_rate_limit()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  recent_total integer;
+  recent_same_phone integer;
+begin
+  select count(*) into recent_total
+  from public.severance_submissions
+  where created_at > now() - interval '1 minute';
+
+  if recent_total >= 30 then
+    raise exception '提交过于频繁，请稍后再试。';
+  end if;
+
+  if new.phone is not null then
+    select count(*) into recent_same_phone
+    from public.severance_submissions
+    where phone = new.phone
+      and created_at > now() - interval '1 hour';
+
+    if recent_same_phone >= 5 then
+      raise exception '该手机号短时间内提交次数过多，请稍后再试。';
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists severance_submissions_rate_limit on public.severance_submissions;
+create trigger severance_submissions_rate_limit
+before insert on public.severance_submissions
+for each row execute function public.enforce_severance_submission_rate_limit();
+
 alter table public.severance_submissions enable row level security;
 
 grant usage on schema public to anon;

@@ -9,7 +9,7 @@
   },
   "routes": [
     {
-      "pattern": "severance.masonhu.xyz",
+      "pattern": "severance.masonhu.cc",
       "custom_domain": true
     }
   ]
