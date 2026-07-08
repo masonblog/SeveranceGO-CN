@@ -34,6 +34,13 @@ corepack pnpm deploy:cloudflare
 
 该脚本会创建 `severance_submissions` 表，并启用 Row Level Security。匿名用户仅允许插入，不允许公开读取。
 
+脚本还包含基础防滥用措施，如果线上表是旧版本，需要重新执行一次 `supabase/schema.sql`：
+
+- 手机号格式约束：`phone` 非空时必须是中国大陆手机号格式（仅约束新插入的行）。
+- 数据库级限速触发器：全表每分钟最多 30 条插入；同一手机号每小时最多 5 条。超限时插入会报错，前端会把错误信息展示给用户。
+
+以上只能挡住简单的脚本刷量。如果垃圾提交明显增多，建议再加验证码（如 Cloudflare Turnstile，需要一个服务端校验入口，例如 Supabase Edge Function）。
+
 提交数据会同时保存两种形态：
 
 - 独立列：入职时间、离职时间、合同信息、收入、地区、解除原因代码、解除原因中文标签、解除原因分组、咨询联系方式等，方便在 Supabase Table Editor 里查看和导出。
