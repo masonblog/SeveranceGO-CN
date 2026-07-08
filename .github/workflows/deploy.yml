@@ -1,4 +1,4 @@
-name: Buid and Deploy
+name: Build and Deploy
 
 on:
   push:
@@ -83,7 +83,7 @@ jobs:
   deploy-cloudflare:
     environment:
       name: cloudflare-workers
-      url: https://severance.masonhu.xyz
+      url: https://severance.masonhu.cc
     runs-on: ubuntu-latest
     needs: build
     permissions:

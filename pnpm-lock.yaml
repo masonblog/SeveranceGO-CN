@@ -20,9 +20,6 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
-      vite:
-        specifier: ^5.4.11
-        version: 5.4.21
     devDependencies:
       '@types/react':
         specifier: ^18.3.12
@@ -36,6 +33,9 @@ importers:
       typescript:
         specifier: ^5.6.3
         version: 5.9.3
+      vite:
+        specifier: ^5.4.11
+        version: 5.4.21
       vitest:
         specifier: ^2.1.4
         version: 2.1.9
