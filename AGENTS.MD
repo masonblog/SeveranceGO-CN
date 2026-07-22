@@ -18,7 +18,7 @@ The app is user-facing and law/data sensitive. Treat every change to calculation
 - `src/lib/*.test.ts`, `src/data/*.test.ts`: Vitest coverage for calculation and region data.
 - `supabase/schema.sql`: Supabase table, RLS, grants, and schema-cache reload.
 - `docs/data-sources.md`: Human-readable wage data source notes.
-- `.github/workflows/deploy.yml`: GitHub Pages build/deploy and optional Cloudflare Workers deploy.
+- `.github/workflows/deploy.yml`: Cloudflare Workers primary deploy and GitHub Pages fallback deploy.
 - `wrangler.jsonc`: Cloudflare Workers Static Assets config for `dist`.
 
 ## Local Setup
@@ -96,8 +96,9 @@ When changing submitted fields:
 GitHub Actions deploys pushes to `main` or `master`.
 
 - GitHub Pages requires repository secrets `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-- Cloudflare Workers deploy is optional and runs only when `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are configured.
+- Cloudflare Workers is the primary site at `https://severance.masonhu.cc` and deploys when `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are configured; GitHub Pages is the fallback site.
 - `wrangler.jsonc` deploys `dist` as static assets and falls back to `index.html` for SPA routes.
+- Wrangler uses its static-asset manifest to upload only missing or changed assets.
 - Do not commit generated `dist`, `.wrangler`, `node_modules`, local env files, or dependency cache folders.
 
 ## Coding Style

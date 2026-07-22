@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - master
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
   workflow_dispatch:
 
 permissions:
@@ -13,8 +16,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: production-deploy
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -35,7 +38,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Validate Supabase build env
         run: |
@@ -61,13 +64,6 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
-
-      - name: Upload static site artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: site-dist
-          path: dist
-          if-no-files-found: error
 
   deploy-github:
     environment:
@@ -109,10 +105,15 @@ jobs:
       - name: Download static site artifact
         uses: actions/download-artifact@v4
         with:
-          name: site-dist
-          path: dist
+          name: github-pages
+          path: pages-artifact
 
-      - name: Deploy to Cloudflare Workers
+      - name: Extract static site artifact
+        run: |
+          mkdir dist
+          tar -xf pages-artifact/artifact.tar -C dist
+
+      - name: Deploy changed assets to Cloudflare Workers
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         uses: cloudflare/wrangler-action@v4
         with:

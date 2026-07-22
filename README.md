@@ -8,7 +8,7 @@
 
 项目帮助你一键估算离职经济补偿金、赔偿金、代通知金，以及未签劳动合同二倍工资等一次性补偿数额，基于《劳动合同法》《劳动合同法实施条例》及劳动争议司法解释的常见规则，根据录入的具体信息进行综合评估。
 
-[开始使用](https://masonblog.github.io/SeveranceGO-CN/) | [备用地址](https://severance.masonhu.cc/)
+[开始使用（Cloudflare）](https://severance.masonhu.cc/) | [备用地址（GitHub Pages）](https://masonblog.github.io/SeveranceGO-CN/)
 
 ---
 
@@ -17,7 +17,7 @@
 - 单页响应式表单，提交后展示计算结果。
 - 内置 2024 年平均工资和最新最低工资参考数据，并在页面展示来源、口径和数据等级。
 - 结果按区间和明细展示，包括 N、2N、N+1、未签合同二倍工资等。
-- GitHub Actions 自动构建并部署到 GitHub Pages，同时部署 Cloudflare Workers 备份站点。
+- GitHub Actions 自动构建并部署到 Cloudflare Workers 主站，同时发布 GitHub Pages 备用站点。
 
 ## 表单填写教程
 

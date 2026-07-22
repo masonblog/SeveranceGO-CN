@@ -29,7 +29,7 @@ const formatSupabaseError = (error: { code?: string; message?: string; details?:
   ) {
     const missingColumn = error.message?.match(/'([^']+)' column/)?.[1];
     const columnHint = missingColumn ? `缺失字段：${missingColumn}。` : '';
-    return new Error(`提交失败：Supabase 表结构未同步，REST API schema cache 尚未找到新字段。${columnHint}请确认 GitHub Pages 使用的 VITE_SUPABASE_URL 与你执行 SQL 的 Supabase 项目一致，然后重新执行 supabase/schema.sql。`);
+    return new Error(`提交失败：Supabase 表结构未同步，REST API schema cache 尚未找到新字段。${columnHint}请确认线上站点构建使用的 VITE_SUPABASE_URL 与你执行 SQL 的 Supabase 项目一致，然后重新执行 supabase/schema.sql。`);
   }
 
   if (error.code === '42501' || error.message?.toLowerCase().includes('permission denied')) {
