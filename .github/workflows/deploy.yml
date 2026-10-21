@@ -113,6 +113,10 @@ jobs:
           mkdir dist
           tar -xf pages-artifact/artifact.tar -C dist
 
+      - name: Configure legacy redirect with Cloudflare API
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        run: node scripts/sync-cloudflare-redirect.mjs
+
       - name: Deploy changed assets to Cloudflare Workers
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         uses: cloudflare/wrangler-action@v4
@@ -122,6 +126,10 @@ jobs:
           command: deploy
           packageManager: pnpm
           wranglerVersion: "4.91.0"
+
+      - name: Verify Cloudflare redirect rule and live responses
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        run: node scripts/sync-cloudflare-redirect.mjs --verify-only
 
       - name: Skip Cloudflare deployment
         if: env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == ''

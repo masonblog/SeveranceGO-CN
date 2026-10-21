@@ -20,6 +20,7 @@ The app is user-facing and law/data sensitive. Treat every change to calculation
 - `docs/data-sources.md`: Human-readable wage data source notes.
 - `.github/workflows/deploy.yml`: Cloudflare Workers primary deploy and GitHub Pages fallback deploy.
 - `wrangler.jsonc`: Cloudflare Workers Static Assets config for `dist`.
+- `cloudflare/legacy-redirect.json`, `scripts/sync-cloudflare-redirect.mjs`: Cloudflare Single Redirect rule and official API synchronization/verification used by GitHub Actions.
 
 ## Local Setup
 
@@ -96,9 +97,10 @@ When changing submitted fields:
 GitHub Actions deploys pushes to `main` or `master`.
 
 - GitHub Pages requires repository secrets `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-- Cloudflare Workers is the primary site at `https://severance.masonhu.org` and deploys when `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are configured; GitHub Pages is the fallback site. Keep `severance.masonhu.cc` bound to the Worker for HTTP 308 redirects that preserve paths and query strings.
+- Cloudflare Workers is the primary site at `https://severance.masonhu.org` and deploys when `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are configured; GitHub Pages is the fallback site. Keep `severance.masonhu.cc` bound to the Worker to retain managed DNS and TLS. Cloudflare Single Redirects perform its HTTP 308 redirects before the Worker, preserving paths and query strings.
 - `wrangler.jsonc` deploys `dist` as static assets and falls back to `index.html` for SPA routes.
-- `src/worker.ts` runs before assets to redirect the legacy hostname and delegates other requests to the `ASSETS` binding.
+- `src/worker.ts` delegates requests to the `ASSETS` binding. Do not add legacy redirect logic to it or enable `assets.run_worker_first` for redirects.
+- GitHub Actions must successfully sync and read back the redirect rule through the official Cloudflare API before deploying the Worker. Keep updates scoped to the rule's stable `ref`, preserving unrelated zone rules. The token needs Zone > Single Redirect > Edit on `masonhu.cc` in addition to Workers deployment permissions.
 - Wrangler uses its static-asset manifest to upload only missing or changed assets.
 - Do not commit generated `dist`, `.wrangler`, `node_modules`, local env files, or dependency cache folders.
 
