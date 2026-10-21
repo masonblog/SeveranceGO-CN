@@ -13,10 +13,6 @@
     {
       "pattern": "severance.masonhu.org",
       "custom_domain": true
-    },
-    {
-      "pattern": "severance.masonhu.cc",
-      "custom_domain": true
     }
   ]
 }

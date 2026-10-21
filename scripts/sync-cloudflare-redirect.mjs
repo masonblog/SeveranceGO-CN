@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
+import { createCloudflareApi } from './cloudflare-api.mjs';
 
 export const config = JSON.parse(readFileSync(new URL('../cloudflare/legacy-redirect.json', import.meta.url), 'utf8'));
 const permissionHint = '请给 CLOUDFLARE_API_TOKEN 增加 masonhu.cc 的“区域 → 单个重定向（Single Redirect）→ 编辑”和“区域 → 区域 → 读取”权限。';
@@ -10,23 +11,7 @@ function ruleMatches(rule) {
 }
 
 export async function syncRedirect({ token, accountId, request = fetch, verifyOnly = false }) {
-  if (!token || !accountId) throw new Error('缺少 CLOUDFLARE_API_TOKEN 或 CLOUDFLARE_ACCOUNT_ID。');
-
-  async function api(path, { method = 'GET', body, allowMissing = false } = {}) {
-    const response = await request(`https://api.cloudflare.com/client/v4${path}`, {
-      method,
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      ...(body ? { body: JSON.stringify(body) } : {}),
-      signal: AbortSignal.timeout(30_000),
-    });
-    const data = await response.json();
-    if (allowMissing && response.status === 404 && data.success === false) return null;
-    if (!response.ok || data.success !== true) {
-      const detail = (data.errors ?? []).map(({ code, message }) => `${code}: ${message}`).join('; ');
-      throw new Error(`Cloudflare API ${method} ${path} 失败（HTTP ${response.status}）：${detail}。${permissionHint}`);
-    }
-    return data.result;
-  }
+  const api = createCloudflareApi({ token, accountId, request, permissionHint });
 
   const query = new URLSearchParams({ name: config.zone_name, 'account.id': accountId, status: 'active' });
   const zones = await api(`/zones?${query}`);
@@ -61,6 +46,7 @@ export async function syncRedirect({ token, accountId, request = fetch, verifyOn
     throw new Error('Cloudflare 规则校验失败：托管重定向规则未位于首位或配置不一致，停止后续部署。');
   }
   console.log('已确认 Cloudflare 单个重定向：severance.masonhu.cc → https://severance.masonhu.org，308，保留路径和查询参数。');
+  return { zoneId: zones[0].id };
 }
 
 export async function verifyPublicRedirects({ request = fetch, attempts = 5 } = {}) {

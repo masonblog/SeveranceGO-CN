@@ -17,7 +17,7 @@ permissions:
 
 concurrency:
   group: production-deploy
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -117,6 +117,10 @@ jobs:
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         run: node scripts/sync-cloudflare-redirect.mjs
 
+      - name: Migrate legacy hostname from Worker binding to proxied DNS
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        run: node scripts/sync-cloudflare-dns.mjs
+
       - name: Deploy changed assets to Cloudflare Workers
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         uses: cloudflare/wrangler-action@v4
@@ -129,7 +133,9 @@ jobs:
 
       - name: Verify Cloudflare redirect rule and live responses
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
-        run: node scripts/sync-cloudflare-redirect.mjs --verify-only
+        run: |
+          node scripts/sync-cloudflare-dns.mjs --verify-only
+          node scripts/sync-cloudflare-redirect.mjs --verify-only
 
       - name: Skip Cloudflare deployment
         if: env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == ''

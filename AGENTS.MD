@@ -21,6 +21,7 @@ The app is user-facing and law/data sensitive. Treat every change to calculation
 - `.github/workflows/deploy.yml`: Cloudflare Workers primary deploy and GitHub Pages fallback deploy.
 - `wrangler.jsonc`: Cloudflare Workers Static Assets config for `dist`.
 - `cloudflare/legacy-redirect.json`, `scripts/sync-cloudflare-redirect.mjs`: Cloudflare Single Redirect rule and official API synchronization/verification used by GitHub Actions.
+- `scripts/sync-cloudflare-dns.mjs`: Detach the legacy Worker custom domain and maintain its standalone proxied A record using the official API.
 
 ## Local Setup
 
@@ -97,10 +98,11 @@ When changing submitted fields:
 GitHub Actions deploys pushes to `main` or `master`.
 
 - GitHub Pages requires repository secrets `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-- Cloudflare Workers is the primary site at `https://severance.masonhu.org` and deploys when `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are configured; GitHub Pages is the fallback site. Keep `severance.masonhu.cc` bound to the Worker to retain managed DNS and TLS. Cloudflare Single Redirects perform its HTTP 308 redirects before the Worker, preserving paths and query strings.
+- Cloudflare Workers is the primary site at `https://severance.masonhu.org` and deploys when `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are configured; GitHub Pages is the fallback site. Bind only the primary hostname to the Worker. Maintain `severance.masonhu.cc` as a standalone proxied A record pointing to `192.0.2.1`; never reattach it to the Worker. Cloudflare Single Redirects perform its HTTP 308 redirects, preserving paths and query strings.
 - `wrangler.jsonc` deploys `dist` as static assets and falls back to `index.html` for SPA routes.
 - `src/worker.ts` delegates requests to the `ASSETS` binding. Do not add legacy redirect logic to it or enable `assets.run_worker_first` for redirects.
 - GitHub Actions must successfully sync and read back the redirect rule through the official Cloudflare API before deploying the Worker. Keep updates scoped to the rule's stable `ref`, preserving unrelated zone rules. The token needs Zone > Single Redirect > Edit on `masonhu.cc` in addition to Workers deployment permissions.
+- After confirming the rule, Actions migrates the legacy DNS before deploying the Worker. Keep DNS mutations scoped to the exact legacy hostname and preserve unrelated records. Verify both the absence of a Worker binding and the proxied A record after deployment. DNS writes require Zone > DNS > Edit on `masonhu.cc`. Do not cancel a production deployment in the middle of DNS migration.
 - Wrangler uses its static-asset manifest to upload only missing or changed assets.
 - Do not commit generated `dist`, `.wrangler`, `node_modules`, local env files, or dependency cache folders.
 

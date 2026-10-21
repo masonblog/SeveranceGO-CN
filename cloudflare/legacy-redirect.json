@@ -1,5 +1,14 @@
 {
   "zone_name": "masonhu.cc",
+  "worker_name": "severancego-cn",
+  "dns_record": {
+    "type": "A",
+    "name": "severance.masonhu.cc",
+    "content": "192.0.2.1",
+    "proxied": true,
+    "ttl": 1,
+    "comment": "Managed by SeveranceGO-CN GitHub Actions; redirect-only hostname"
+  },
   "phase": "http_request_dynamic_redirect",
   "rule": {
     "ref": "severancego_legacy_domain_redirect",
