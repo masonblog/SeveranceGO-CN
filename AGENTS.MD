@@ -96,8 +96,9 @@ When changing submitted fields:
 GitHub Actions deploys pushes to `main` or `master`.
 
 - GitHub Pages requires repository secrets `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-- Cloudflare Workers is the primary site at `https://severance.masonhu.cc` and deploys when `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are configured; GitHub Pages is the fallback site.
+- Cloudflare Workers is the primary site at `https://severance.masonhu.org` and deploys when `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are configured; GitHub Pages is the fallback site. Keep `severance.masonhu.cc` bound to the Worker for HTTP 308 redirects that preserve paths and query strings.
 - `wrangler.jsonc` deploys `dist` as static assets and falls back to `index.html` for SPA routes.
+- `src/worker.ts` runs before assets to redirect the legacy hostname and delegates other requests to the `ASSETS` binding.
 - Wrangler uses its static-asset manifest to upload only missing or changed assets.
 - Do not commit generated `dist`, `.wrangler`, `node_modules`, local env files, or dependency cache folders.
 

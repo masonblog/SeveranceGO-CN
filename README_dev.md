@@ -76,22 +76,24 @@ notify pgrst, 'reload schema';
 
 - workflow 文件：`.github/workflows/deploy.yml`
 - 触发方式：推送到 `main` 或 `master`，也可手动 `workflow_dispatch`
-- 主站：Cloudflare Workers `https://severance.masonhu.cc`
+- 主站：Cloudflare Workers `https://severance.masonhu.org`
 - 备用站点：GitHub Pages `https://masonblog.github.io/SeveranceGO-CN/`
 
 纯 Markdown 或 `docs/` 目录变更不会触发站点部署；同一分支有新提交时，会取消尚未完成的旧部署。构建产物只生成并上传一次，Cloudflare 与 GitHub Pages 复用同一份产物；Cloudflare 通过 Wrangler 的静态资源清单仅上传缺失或内容变化的文件。
 
 ### Cloudflare Workers
 
-Cloudflare Workers 使用 `wrangler.jsonc` 中的 Workers Static Assets 配置部署 `dist`，将未命中的前端路由回退到 `index.html`，并绑定自定义域名 `severance.masonhu.cc`。
+Cloudflare Workers 使用 `wrangler.jsonc` 中的 Workers Static Assets 配置部署 `dist`，将未命中的前端路由回退到 `index.html`，并绑定自定义域名 `severance.masonhu.org` 和 `severance.masonhu.cc`。新域名提供站点，旧域名通过 `src/worker.ts` 返回 HTTP 308 永久跳转到新域名的 HTTPS 地址，保留路径和查询参数。
+
+`assets.run_worker_first` 设为 `true`，确保旧域名的首页、静态资源和前端路由都先执行跳转；新域名请求交给 `ASSETS` 绑定处理。配置依据见 Cloudflare 的 [静态资源绑定文档](https://developers.cloudflare.com/workers/static-assets/binding/)和[自定义域名文档](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)。
 
 你需要在 GitHub 仓库中手动完成：
 
-1. `masonhu.cc` 已托管在 Cloudflare，并且当前 Cloudflare 账号有权限管理该 zone。
+1. `masonhu.org` 和 `masonhu.cc` 均已托管在同一个 Cloudflare 账号，并且当前账号有权限管理这两个 zone。保留旧域名的托管和绑定，才能继续提供跳转。
 2. GitHub 仓库 `Settings` -> `Secrets and variables` -> `Actions` 中新增：
    - `CLOUDFLARE_API_TOKEN`
    - `CLOUDFLARE_ACCOUNT_ID`
-3. `CLOUDFLARE_API_TOKEN` 至少需要有部署 Workers、编辑 Workers routes/custom domains，以及读取对应 zone 的权限。
+3. `CLOUDFLARE_API_TOKEN` 至少需要有部署 Workers、编辑 Workers routes/custom domains，以及读取这两个 zone 的权限。
 
 ### GitHub Pages
 
@@ -107,7 +109,7 @@ Cloudflare Workers 使用 `wrangler.jsonc` 中的 Workers Static Assets 配置�
 
 完成后，推送到 `main` 或 `master` 会同时部署：
 
-- Cloudflare Workers 主站：`https://severance.masonhu.cc`
+- Cloudflare Workers 主站：`https://severance.masonhu.org`（旧域名 `https://severance.masonhu.cc` 永久跳转到主站）
 - GitHub Pages 备用站点：`https://masonblog.github.io/SeveranceGO-CN/`
 
 如果 Cloudflare secrets 尚未配置，Cloudflare job 会跳过，GitHub Pages 备用站点仍会正常部署。

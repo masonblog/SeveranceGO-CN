@@ -79,7 +79,7 @@ jobs:
   deploy-cloudflare:
     environment:
       name: cloudflare-workers
-      url: https://severance.masonhu.cc
+      url: https://severance.masonhu.org
     runs-on: ubuntu-latest
     needs: build
     permissions:
